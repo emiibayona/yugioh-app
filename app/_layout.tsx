@@ -11,16 +11,13 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
-import { ActivityIndicator, Text, View } from 'react-native';
-import { Suspense } from 'react';
+// import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
+import { ActivityIndicator, Text, View } from "react-native";
+import { Suspense } from "react";
 
-
-import * as FileSystem from 'expo-file-system';
-import { Asset } from 'expo-asset';
-
-
-
+import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
+import * as SQLite from "expo-sqlite";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -36,62 +33,86 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
-
-  
   const dbName = "yugioh-scanner.db";
 
   const [isDbLoaded, setIsDbLoaded] = useState(false);
 
-  // useEffect(() => {
-  async function loadDatabase() {
+  useEffect(() => {
+    async function loadDatabase() {
+      try {
+        //     if (isDbLoaded) return; // Prevent re-loading if already loaded
+        //     const dbDbDirectory = `${FileSystem.documentDirectory}SQLite`;
+        //     const dbPath = `${dbDbDirectory}/${dbName}`;
+        //     const dbExists = await FileSystem.getInfoAsync(dbPath);
+        //     console.log("🚀 ~ loadDatabase ~ dbExists:", dbExists);
 
-    try {
-      const dbDbDirectory = `${FileSystem.documentDirectory}SQLite`;
-      console.log("FileSystem.documentDirectory", FileSystem.documentDirectory)
-      console.log("Database directory:", dbDbDirectory);
-      const dbPath = `${dbDbDirectory}/${dbName}`;
-      console.log("Database path:", dbPath);
-      const dbExists = await FileSystem.getInfoAsync(dbPath);
+        //     if (!dbExists.exists) {
+        //       await FileSystem.makeDirectoryAsync(dbDbDirectory, {
+        //         intermediates: true,
+        //       });
+        //       const asset = await Asset.fromModule(
+        //         require("../assets/yugioh-scanner.db"),
+        //       ).downloadAsync();
+        //       if (asset.localUri) {
+        //         await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
+        //       }
+        //     } else {
+        //       const db = await SQLite.openDatabaseAsync(dbName);
+        //       console.log("Database opened successfully in RootLayout", db);
+        //       const result = await db.getAllAsync(
+        //         "SELECT name FROM sqlite_master;",
+        //       );
+        //       console.log("Tables found:", result); // Should now show cardPoolNames
+        //     }
+        //     setIsDbLoaded(true);
 
-      if (!dbExists.exists) {
-        // Create the SQLite directory if it doesn't exist
-        await FileSystem.makeDirectoryAsync(dbDbDirectory, { intermediates: true });
-        // Copy the file from assets to the internal app folder
-        const asset = await Asset.fromModule(require(`../assets/${dbName}`)).downloadAsync();
+        const dbName = "yugioh-scanner.db";
+        // SQLite MUST be capitalized in the path
+        const dbFolder = `${FileSystem.documentDirectory}SQLite/`;
+        const dbPath = `${dbFolder}${dbName}`;
+
+        // 1. Ensure the directory exists
+        await FileSystem.makeDirectoryAsync(dbFolder, {
+          intermediates: true,
+        }).catch(() => {});
+
+        // 2. Load and Force Copy (Overwrite every time for this test)
+        const asset = await Asset.fromModule(
+          require("../assets/yugioh-scanner.db"),
+        ).downloadAsync();
+
         if (asset.localUri) {
-          await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
+          await FileSystem.copyAsync({
+            from: asset.localUri,
+            to: dbPath,
+          });
+          console.log("📂 Database copied to:", dbPath);
         }
+
+        // 3. Open it using the SAME name
+        // const db = await SQLite.openDatabaseAsync(dbName);
+        // const tables = await db.getAllAsync(
+        //   "SELECT name FROM sqlite_master WHERE type='table';",
+        // );
+        // console.log("🛠️ VERIFIED TABLES:", JSON.stringify(tables));
+        setIsDbLoaded(true);
+      } catch (error) {
+        console.error("Error loading database:", error);
       }
-      setIsDbLoaded(true);
-    } catch (error) {
-      console.error("Error loading database:", error);
     }
 
+    loadDatabase();
+  }, [isDbLoaded]);
 
-    // }
-    // loadDatabase();
+  if (!loaded || !isDbLoaded) {
+    return <LoadingScreen />;
   }
-  // }, [isDbLoaded]);
-
-  // if (!isDbLoaded) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  //       <ActivityIndicator size="large" />
-  //       <Text style={{ marginTop: 10 }}>Preparing Database...</Text>
-  //     </View>
-  //   );
-  // }
 
   return (
     <GestureHandlerRootView>
       <ThemeProvider value={DarkTheme}>
         <Suspense fallback={<LoadingScreen />}>
-          <SQLiteProvider databaseName={dbName} useSuspense>
-
-
+          <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
             <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen
@@ -102,9 +123,12 @@ export default function RootLayout() {
                 name="media"
                 options={{ presentation: "modal", headerShown: false }}
               />
-              <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
+              <Stack.Screen
+                name="+not-found"
+                options={{ presentation: "modal" }}
+              />
             </Stack>
-          </SQLiteProvider>
+          </SQLite.SQLiteProvider>
         </Suspense>
       </ThemeProvider>
     </GestureHandlerRootView>
@@ -113,8 +137,9 @@ export default function RootLayout() {
 
 function LoadingScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator size="large" />
+      <Text style={{ marginTop: 20, color: "white" }}>Loading...</Text>
     </View>
   );
 }

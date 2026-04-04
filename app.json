@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Obscura Clone",
-    "slug": "pro-camera-clone",
+    "name": "Yugioh Card Scanner",
+    "slug": "yugioh-card-scanner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,13 +12,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "packagerOpts": {
+      "assetExts": ["db", "sqlite"]
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone."
       },
-      "bundleIdentifier": "dev.codewithbeto.obscura"
+      "bundleIdentifier": "dev.colomardo.yugioh-card-scanner"
     },
     "android": {
       "adaptiveIcon": {

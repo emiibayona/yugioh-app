@@ -9,7 +9,7 @@ export default function Overlay({ card }: OverlayProps) {
 
     console.log("Card in Overlay:", card);
     return (
-        <View style={styles.wrapper}>
+        <View style={styles.wrapper} pointerEvents="box-none">
             {card && <View style={styles.miniScanned}><MiniScannedDetails card={card} /></View>}
             <View style={styles.collectionActions}>
                 <ScannerCollectionActions />

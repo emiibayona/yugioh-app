@@ -25,16 +25,20 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         zIndex: 3,
-        borderStyle: 'solid',
-        borderColor: 'orange',
-        borderWidth: 2,
-        width: 100
+        // borderStyle: 'solid',
+        // borderColor: 'orange',
+        // borderWidth: 2,
+        width: 200,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 20,
+        paddingHorizontal: 10,
     },
     label: {
         fontSize: 16,
         marginBottom: 10,
     },
     slider: {
+        width: '100%',
         height: 40,
     },
 });

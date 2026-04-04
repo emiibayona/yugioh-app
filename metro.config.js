@@ -2,7 +2,7 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Add .db to the list of recognized asset extensions
+// ADD THIS LINE: Tell Metro to recognize .db files
 config.resolver.assetExts.push('db');
 
 module.exports = config;
