@@ -83,10 +83,7 @@ export default function ScannerComponent({
         imageUri,
         TextRecognitionScript.LATIN,
       );
-      const tables = await db?.getAllAsync(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-      );
-      console.log("Database tables:", tables);
+
       if (result && result.blocks) {
         const sortedBlocks = [...result.blocks].sort(
           (a, b) => (a.frame?.top || 0) - (b.frame?.top || 0),

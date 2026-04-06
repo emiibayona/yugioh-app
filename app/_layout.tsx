@@ -11,7 +11,6 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-// import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { ActivityIndicator, Text, View } from "react-native";
 import { Suspense } from "react";
 
@@ -115,29 +114,23 @@ export default function RootLayout() {
   useEffect(() => {
     async function initializeGeartownDb() {
       if (isDbLoaded) return;
-      // 1. Check if the file exists and has actual data
-      // await FileSystem.deleteAsync(dbPath); // UNCOMMENT, RUN ONCE, THEN REMOVE
-      // return;
+
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
-      const lastSync = await AsyncStorage.getItem("last_db_sync");
 
       // 🚨 THE GUARD: Only download if it's missing, empty, or 7 days old
       const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
-      const isOld =
-        !lastSync || Date.now() - Number(lastSync) > 7 * 24 * 60 * 60 * 1000;
       const vRes = await fetch(`${apiUrl}/version`);
       const vData = await vRes.json();
       const needUpdateVersion = await checkVersion(vData.version);
 
-      if (isFileBroken || isOld || needUpdateVersion) {
-        console.log("📥 Syncing database (Missing/Broken/Old)...");
+      if (isFileBroken || needUpdateVersion) {
+        console.log("📥 Syncing database (Missing/Broken)...");
 
         // Perform your download from Vercel Blob here
         const success = await downloadDatabase();
 
         if (success) {
           // Record the success so we don't do it again tomorrow
-          await AsyncStorage.setItem("last_db_sync", Date.now().toString());
           console.log("✅ Database persisted. Next check in 7 days.");
         }
       } else {
@@ -150,83 +143,6 @@ export default function RootLayout() {
       setIsDbLoaded(true);
     }
 
-    //   async function loadDatabase() {
-    //     try {
-    //       if (isDbLoaded) return;
-    //       console.log("INIT LOAD DB");
-
-    //
-
-    //       // 1. Ensure the directory exists
-    //       await FileSystem.makeDirectoryAsync(dbFolder, {
-    //         intermediates: true,
-    //       }).catch(() => {});
-
-    //       const fileInfo = await FileSystem.getInfoAsync(dbPath);
-
-    //       // 1. If the DB not exists, then download
-    //       if (!fileInfo.exists && apiUrl) {
-    //         console.log("📂 Database missing. Initial download...");
-    //         try {
-    //           await AsyncStorage.setItem(versionKey, "0.0.0");
-    //         } catch (e) {
-    //           console.warn("Could not fetch version after initial download.");
-    //         }
-    //       } else {
-    //         // 1.2 If exists, force to copy always to the sqllite folder from assets
-    //         console.log("📂 Database exists. Syncing with assets as baseline...");
-    //         // const item = require(
-    //         //   `${FileSystem.documentDirectory}SQLite/${dbName}`,
-    //         // );
-    //         // const asset = await Asset.fromModule(item).downloadAsync();
-    //         const asset = {
-    //           localUri: dbPath,
-    //         }; // Mock asset for testing
-    //         if (asset.localUri) {
-    //           await FileSystem.copyAsync({
-    //             from: asset.localUri,
-    //             to: dbPath,
-    //           });
-    //           // Reset version tag after asset overwrite to ensure update check if needed
-    //         }
-    //       }
-
-    //       ///var/mobile/Containers/Data/Application/4AC40604-CCE3-4AFD-A205-081B85D0C2F0/Documents/SQLite/yugioh_database.sqlite
-
-    //       // 1.1 Logic to re-download if X.Y version changes
-
-    //       file: try {
-    //         const remoteVersion = vData.version;
-
-    //         const localVersion =
-    //           (await AsyncStorage.getItem(versionKey)) || "0.0.0";
-
-    //         const rParts = remoteVersion.split(".");
-    //         const lParts = localVersion.split(".");
-
-    //         const rX = parseInt(rParts[0] || "0");
-    //         const rY = parseInt(rParts[1] || "0");
-    //         const lX = parseInt(lParts[0] || "0");
-    //         const lY = parseInt(lParts[1] || "0");
-
-    //         if (rX !== lX || rY !== lY) {
-    //           console.log(
-    //             `📂 API version changed (${localVersion} -> ${remoteVersion}). Updating DB...`,
-    //           );
-    //           await downloadDatabase();
-    //           await AsyncStorage.setItem(versionKey, remoteVersion);
-    //         }
-    //         setIsDbLoaded(true);
-    //       } catch (e) {
-    //         console.log("Version check skipped or failed.");
-    //       }
-    //     } catch (error) {
-    //       console.error("Error loading database:", error);
-    //       setIsDbLoaded(true);
-    //     }
-    //   }
-
-    // loadDatabase();
     initializeGeartownDb();
   }, [isDbLoaded]);
 
