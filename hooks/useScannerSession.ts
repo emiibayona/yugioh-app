@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SQLiteDatabase } from "expo-sqlite";
 
 export interface ScannedCard {
-  cardId: string;
+  id: string;
   name: string;
   image?: string;
   quantity: number;
@@ -49,7 +49,7 @@ export default function useScannerSession(db?: SQLiteDatabase) {
 
   const addCard = (card: any) => {
     setSessionCards((prev) => {
-      const existingIndex = prev.findIndex((c) => c.cardId === card.cardId);
+      const existingIndex = prev.findIndex((c) => c.id === card.id);
       let newCards;
       if (existingIndex > -1) {
         newCards = [...prev];
@@ -57,7 +57,7 @@ export default function useScannerSession(db?: SQLiteDatabase) {
       } else {
         newCards = [
           {
-            cardId: card.cardId,
+            id: card.id,
             name: card.name,
             image: card.image,
             quantity: 1,
@@ -72,33 +72,31 @@ export default function useScannerSession(db?: SQLiteDatabase) {
     });
   };
 
-  const removeCard = (cardId: string) => {
+  const removeCard = (id: string) => {
     setSessionCards((prev) => {
-      const newCards = prev.filter((c) => c.cardId !== cardId);
+      const newCards = prev.filter((c) => c.id !== id);
       saveSession(newCards);
       return newCards;
     });
   };
 
-  const toggleFoil = (cardId: string) => {
+  const toggleFoil = (id: string) => {
     setSessionCards((prev) => {
       const newCards = prev.map((c) =>
-        c.cardId === cardId ? { ...c, isFoil: !c.isFoil } : c,
+        c.id === id ? { ...c, isFoil: !c.isFoil } : c,
       );
       saveSession(newCards);
       return newCards;
     });
   };
 
-  const updateQuantity = (cardId: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) {
-      removeCard(cardId);
+      removeCard(id);
       return;
     }
     setSessionCards((prev) => {
-      const newCards = prev.map((c) =>
-        c.cardId === cardId ? { ...c, quantity } : c,
-      );
+      const newCards = prev.map((c) => (c.id === id ? { ...c, quantity } : c));
       saveSession(newCards);
       return newCards;
     });
@@ -121,7 +119,7 @@ export default function useScannerSession(db?: SQLiteDatabase) {
       // 1. Ensure userCollection table exists
       // await db.execAsync(`
       //   CREATE TABLE IF NOT EXISTS userCollection (
-      //     cardId TEXT PRIMARY KEY,
+      //     id TEXT PRIMARY KEY,
       //     quantity INTEGER DEFAULT 0,
       //     updatedAt INTEGER
       //   );
@@ -130,12 +128,12 @@ export default function useScannerSession(db?: SQLiteDatabase) {
       // // 2. Upsert each card from session
       // for (const card of sessionCards) {
       //   await db.runAsync(
-      //     `INSERT INTO userCollection (cardId, quantity, updatedAt)
+      //     `INSERT INTO userCollection (id, quantity, updatedAt)
       //      VALUES (?, ?, ?)
-      //      ON CONFLICT(cardId) DO UPDATE SET
+      //      ON CONFLICT(id) DO UPDATE SET
       //      quantity = quantity + excluded.quantity,
       //      updatedAt = excluded.updatedAt`,
-      //     [card.cardId, card.quantity, Date.now()],
+      //     [card.id, card.quantity, Date.now()],
       //   );
       // }
 

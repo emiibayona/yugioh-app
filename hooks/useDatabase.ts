@@ -2,37 +2,6 @@ import { SQLiteDatabase, useSQLiteContext } from "expo-sqlite";
 import Fuse from "fuse.js";
 
 export default function useDatabase(db: SQLiteDatabase) {
-  // function findTopMatch(
-  //   input: string,
-  //   candidates: { cardId: string; name: string }[],
-  // ): { cardId: string; name: string } | null {
-  //   const options = {
-  //     // The keys in your database objects to search against
-  //     keys: ["name"],
-  //     // 0.0 = perfect match, 1.0 = total mismatch.
-  //     // 0.35 is usually the "sweet spot" for OCR typos.
-  //     threshold: 0.35,
-  //     // Helps find matches even if the OCR missed the start of the name
-  //     location: 0,
-  //     distance: 100,
-  //     includeScore: true,
-  //   };
-
-  //   const fuse = new Fuse(
-  //     candidates.map((x) => ({ ...x, name: x?.name?.toUpperCase() })),
-  //     options,
-  //   );
-  //   const results = fuse.search(input);
-  //   console.log("🚀 ~ findTopMatch ~ candidates:", candidates);
-  //   console.log("🚀 ~ findTopMatch ~ input:", input);
-  //   console.log("🚀 ~ findTopMatch ~ results:", results);
-
-  //   // Return the top result if it exists, otherwise null
-  //   return results.length > 0
-  //     ? (results[0].item as { cardId: string; name: string })
-  //     : null;
-  // }
-
   function findTopMatch(
     input: string,
     candidates: { cardId: string; name: string }[],
@@ -77,7 +46,7 @@ export default function useDatabase(db: SQLiteDatabase) {
       return null;
     }
     const image: { card: string } | null = await db.getFirstAsync(
-      "select * from cardPoolImages as cpi where cpi.cardId = ?",
+      "select * from cards as cpi where cpi.id = ?",
       [cardId],
     );
     return image;
@@ -93,14 +62,14 @@ export default function useDatabase(db: SQLiteDatabase) {
     try {
       // 1. Exact or simple LIKE match first (fast)
       let cardFound: any = await db.getFirstAsync(
-        "SELECT * FROM cardPoolNames WHERE UPPER(name) = ? LIMIT 1",
+        "SELECT * FROM cards WHERE UPPER(name) = ? LIMIT 1",
         [normalized],
       );
 
       // 2. If not found, try a LIKE with wildcards
       if (!cardFound) {
         cardFound = await db.getFirstAsync(
-          "SELECT * FROM cardPoolNames WHERE UPPER(name) LIKE ? LIMIT 1",
+          "SELECT * FROM cards WHERE UPPER(name) LIKE ? LIMIT 1",
           [`%${normalized}%`],
         );
       }
@@ -109,7 +78,7 @@ export default function useDatabase(db: SQLiteDatabase) {
       if (!cardFound) {
         const words = normalized.split(/\s+/).filter((w) => w.length >= 2);
         if (words.length >= 2) {
-          const query = `SELECT * FROM cardPoolNames WHERE ${words
+          const query = `SELECT * FROM cards WHERE ${words
             .map(() => "UPPER(name) LIKE ?")
             .join(" AND ")} LIMIT 20`;
           const params = words.map((w) => `%${w}%`);
@@ -127,7 +96,7 @@ export default function useDatabase(db: SQLiteDatabase) {
         // Try to get candidates that contain the first part of the name
         const prefix = normalized.substring(0, 3);
         const candidates: any[] = await db.getAllAsync(
-          "SELECT * FROM cardPoolNames WHERE name LIKE ? LIMIT 100",
+          "SELECT * FROM cards WHERE name LIKE ? LIMIT 100",
           [`%${prefix}%`],
         );
 
@@ -147,43 +116,6 @@ export default function useDatabase(db: SQLiteDatabase) {
     }
   }
 
-  // async function getCardsByName(cardName: string, withImage: boolean = false) {
-  //   if (!cardName) {
-  //     return null;
-  //   }
-  //   const normalized = normalizeSearchString(cardName);
-  //   const cardsFound: { cardId: string }[] = await db.getAllAsync(
-  //     "select * from cardPoolNames as cpn where UPPER(cpn.name) = ?",
-  //     [normalized.toUpperCase()],
-  //   );
-
-  //   if (cardsFound?.length === 0) {
-  //     const res = findTopMatch(normalized, cardsFound);
-  //     if (res) {
-  //       if (withImage) {
-  //         const image = await findImageByCardId(res.cardId);
-  //         return { ...res, ...image };
-  //       }
-  //     }
-  //     return res;
-  //   }
-  // }
-
-  // function normalizeSearchString(str: string) {
-  //   return (
-  //     str
-  //       .toLowerCase()
-  //       // Remove specific characters: |, _, -, [, ], (, )
-  //       // We also escape characters that have special meaning in Regex
-  //       .replace(/[|_\-\[\]\(\)]/g, " ")
-  //       // Remove any non-alphanumeric characters except spaces
-  //       .replace(/[^a-z0-9\s]/g, "")
-  //       // Collapse multiple spaces into one and trim
-  //       .replace(/\s+/g, " ")
-  //       .trim()
-  //   );
-  // }
-
   async function findCardByEffect(
     effectText: string,
     withImage: boolean = false,
@@ -196,7 +128,7 @@ export default function useDatabase(db: SQLiteDatabase) {
     try {
       // 100% exact match as requested
       const cardFound: any = await db.getFirstAsync(
-        "SELECT * FROM cardPoolNames WHERE effect = ? LIMIT 1",
+        "SELECT * FROM cards WHERE effect = ? LIMIT 1",
         [normalized],
       );
 
@@ -221,7 +153,9 @@ export default function useDatabase(db: SQLiteDatabase) {
     // 1. Try by names first
     if (cardNames && cardNames.length > 0) {
       const filteredNames = cardNames
-        .map((n) => n.trim().toUpperCase().replaceAll("|", "").replaceAll("/", ""))
+        .map((n) =>
+          n.trim().toUpperCase().replaceAll("|", "").replaceAll("/", ""),
+        )
         .filter((n) => n.length >= 3 && !n.includes("\\"));
 
       if (filteredNames.length > 0) {
@@ -229,7 +163,7 @@ export default function useDatabase(db: SQLiteDatabase) {
           const placeholders = filteredNames.map(() => "?").join(",");
           console.log("🚀 ~ findCardByNames ~ filteredNames:", filteredNames);
           let cardFound: any = await db.getFirstAsync(
-            `SELECT * FROM cardPoolNames WHERE UPPER(name) IN (${placeholders}) LIMIT 1`,
+            `SELECT * FROM cards WHERE UPPER(name) IN (${placeholders}) LIMIT 1`,
             filteredNames,
           );
           console.log("🚀 ~ findCardByNames ~ cardFound:", cardFound);
@@ -274,7 +208,7 @@ export default function useDatabase(db: SQLiteDatabase) {
 
     try {
       // 1. Get a broad set of candidates
-      const query = `SELECT * FROM cardPoolNames WHERE UPPER(name) LIKE ? OR UPPER(name) LIKE ? LIMIT 100`;
+      const query = `SELECT * FROM cards WHERE UPPER(name) LIKE ? OR UPPER(name) LIKE ? LIMIT 100`;
       const params = [`%${normalized}%`, `${normalized.substring(0, 3)}%`];
       const candidates: any[] = await db.getAllAsync(query, params);
 

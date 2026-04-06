@@ -22,12 +22,13 @@ import useDatabase from "@/hooks/useDatabase";
 import ScannerOverlay from "./ScannerOverlay";
 import useScannerSession from "@/hooks/useScannerSession";
 import { Ionicons } from "@expo/vector-icons";
+import useCardImage from "@/hooks/useCardImage";
 
 interface ScannerComponentProps {
   onCardDetected: (card: any) => void;
 }
 
-type ScanMode = "quick" | "stopAndGo" | "pause";
+type ScanMode = "lightning" | "stopAndGo" | "pause";
 
 export default function ScannerComponent({
   onCardDetected,
@@ -45,6 +46,7 @@ export default function ScannerComponent({
     toggleFoil,
     clearSession,
   } = useScannerSession(db);
+  const { getCardImageUrl } = useCardImage();
 
   const [zoom, setZoom] = useState(1.5);
   const [lastDetectedName, setLastDetectedName] = useState<string | null>(null);
@@ -81,7 +83,10 @@ export default function ScannerComponent({
         imageUri,
         TextRecognitionScript.LATIN,
       );
-
+      const tables = await db?.getAllAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+      );
+      console.log("Database tables:", tables);
       if (result && result.blocks) {
         const sortedBlocks = [...result.blocks].sort(
           (a, b) => (a.frame?.top || 0) - (b.frame?.top || 0),
@@ -219,17 +224,17 @@ export default function ScannerComponent({
           <TouchableOpacity
             style={[
               styles.modeBtn,
-              scanMode === "quick" && styles.activeModeBtn,
+              scanMode === "lightning" && styles.activeModeBtn,
             ]}
-            onPress={() => handleModeChange("quick")}
+            onPress={() => handleModeChange("lightning")}
           >
             <Text
               style={[
                 styles.modeBtnText,
-                scanMode === "quick" && styles.activeModeBtnText,
+                scanMode === "lightning" && styles.activeModeBtnText,
               ]}
             >
-              QUICK
+              LIGHTNING
             </Text>
           </TouchableOpacity>
 
@@ -280,10 +285,11 @@ export default function ScannerComponent({
           <View style={styles.previewContainer}>
             <Image
               source={{
-                uri: `https://images.ygoprodeck.com/images/cards_small/${recentDetection.cardId}.jpg`,
+                uri: getCardImageUrl(recentDetection.name, recentDetection.id),
               }}
               style={styles.previewImage}
             />
+
             <View style={styles.previewInfo}>
               <Text style={styles.previewTitle} numberOfLines={1}>
                 {recentDetection.name}
@@ -292,21 +298,6 @@ export default function ScannerComponent({
             </View>
           </View>
         )}
-
-        <View style={styles.topRow}>
-          <TouchableOpacity
-            style={styles.sessionCounter}
-            onPress={() => setShowSessionModal(true)}
-          >
-            <Ionicons
-              name="layers-outline"
-              size={20}
-              color="#00FFCC"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.counterText}>{totalScanned} Cards</Text>
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.actionArea}>
           {scanMode === "pause" ? (
@@ -324,12 +315,27 @@ export default function ScannerComponent({
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.statusBadgeText}>
-                {scanMode === "quick"
+                {scanMode === "lightning"
                   ? "⚡ MODALIDAD RÁPIDA"
                   : "🔍 BUSCANDO CARTAS..."}
               </Text>
             </View>
           )}
+        </View>
+
+        <View style={styles.topRow}>
+          <TouchableOpacity
+            style={styles.sessionCounter}
+            onPress={() => setShowSessionModal(true)}
+          >
+            <Ionicons
+              name="layers-outline"
+              size={20}
+              color="#00FFCC"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.counterText}>{totalScanned} Cards</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -390,7 +396,7 @@ export default function ScannerComponent({
                 {searchResults.length > 0 && (
                   <FlatList
                     data={searchResults}
-                    keyExtractor={(item) => `search-${item.cardId}`}
+                    keyExtractor={(item) => `search-${item.id}`}
                     style={styles.searchResultsList}
                     renderItem={({ item }) => (
                       <TouchableOpacity
@@ -399,7 +405,7 @@ export default function ScannerComponent({
                       >
                         <Image
                           source={{
-                            uri: `https://images.ygoprodeck.com/images/cards_small/${item.cardId}.jpg`,
+                            uri: getCardImageUrl(item.name, item.id),
                           }}
                           style={styles.searchItemImage}
                         />
@@ -422,13 +428,13 @@ export default function ScannerComponent({
             {!showSearchInput && (
               <FlatList
                 data={sessionCards}
-                keyExtractor={(item) => item.cardId}
+                keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => (
                   <View style={styles.cardItem}>
                     <Image
                       source={{
-                        uri: `https://images.ygoprodeck.com/images/cards_small/${item.cardId}.jpg`,
+                        uri: getCardImageUrl(item.name, item.id),
                       }}
                       style={styles.cardItemImage}
                     />
@@ -440,7 +446,7 @@ export default function ScannerComponent({
                         <View style={styles.quantityControls}>
                           <TouchableOpacity
                             onPress={() =>
-                              updateQuantity(item.cardId, item.quantity - 1)
+                              updateQuantity(item.id, item.quantity - 1)
                             }
                             style={styles.qtyBtn}
                           >
@@ -453,7 +459,7 @@ export default function ScannerComponent({
                           <Text style={styles.qtyText}>{item.quantity}</Text>
                           <TouchableOpacity
                             onPress={() =>
-                              updateQuantity(item.cardId, item.quantity + 1)
+                              updateQuantity(item.id, item.quantity + 1)
                             }
                             style={styles.qtyBtn}
                           >
@@ -470,7 +476,7 @@ export default function ScannerComponent({
                             styles.foilBtn,
                             item.isFoil && styles.foilBtnActive,
                           ]}
-                          onPress={() => toggleFoil(item.cardId)}
+                          onPress={() => toggleFoil(item.id)}
                         >
                           <Ionicons
                             name={item.isFoil ? "sparkles" : "sparkles-outline"}
@@ -489,7 +495,7 @@ export default function ScannerComponent({
                       </View>
                     </View>
                     <TouchableOpacity
-                      onPress={() => removeCard(item.cardId)}
+                      onPress={() => removeCard(item.id)}
                       style={styles.removeBtn}
                     >
                       <Ionicons
@@ -521,7 +527,7 @@ export default function ScannerComponent({
                   Alert.alert("Coming soon", "Add to binders functionality")
                 }
               >
-                <Text style={styles.footerBtnText}>Add to Binders</Text>
+                <Text style={styles.binderBtnText}>Add to Binders</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -572,7 +578,7 @@ const styles = StyleSheet.create({
   },
   topControls: {
     position: "absolute",
-    top: 60,
+    top: 30,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -613,7 +619,7 @@ const styles = StyleSheet.create({
   },
   bottomControls: {
     position: "absolute",
-    bottom: 40,
+    bottom: 10,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -855,15 +861,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   clearBtn: {
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "#222",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "#444",
   },
   binderBtn: {
     backgroundColor: "#00FFCC",
   },
+  binderBtnText: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
   footerBtnText: {
     fontWeight: "bold",
     fontSize: 13,
+    color: "#FFF",
   },
 });

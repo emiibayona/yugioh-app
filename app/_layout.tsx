@@ -18,6 +18,7 @@ import { Suspense } from "react";
 import * as FileSystem from "expo-file-system";
 import { Asset } from "expo-asset";
 import * as SQLite from "expo-sqlite";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -27,81 +28,206 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  const apiUrl =
+    process?.env?.EXPO_PUBLIC_API_URL || "http://192.168.1.49:8082/api";
+  const versionKey = "db_version_tag";
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  const dbName = "yugioh-scanner.db";
-
   const [isDbLoaded, setIsDbLoaded] = useState(false);
 
-  useEffect(() => {
-    async function loadDatabase() {
-      try {
-        //     if (isDbLoaded) return; // Prevent re-loading if already loaded
-        //     const dbDbDirectory = `${FileSystem.documentDirectory}SQLite`;
-        //     const dbPath = `${dbDbDirectory}/${dbName}`;
-        //     const dbExists = await FileSystem.getInfoAsync(dbPath);
-        //     console.log("🚀 ~ loadDatabase ~ dbExists:", dbExists);
+  const dbName = "yugioh_database.sqlite";
+  const dbFolder = `${FileSystem.documentDirectory}SQLite/`;
+  const dbPath = `${dbFolder}${dbName}`;
 
-        //     if (!dbExists.exists) {
-        //       await FileSystem.makeDirectoryAsync(dbDbDirectory, {
-        //         intermediates: true,
-        //       });
-        //       const asset = await Asset.fromModule(
-        //         require("../assets/yugioh-scanner.db"),
-        //       ).downloadAsync();
-        //       if (asset.localUri) {
-        //         await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
-        //       }
-        //     } else {
-        //       const db = await SQLite.openDatabaseAsync(dbName);
-        //       console.log("Database opened successfully in RootLayout", db);
-        //       const result = await db.getAllAsync(
-        //         "SELECT name FROM sqlite_master;",
-        //       );
-        //       console.log("Tables found:", result); // Should now show cardPoolNames
-        //     }
-        //     setIsDbLoaded(true);
+  async function checkVersion(remoteVersion: string) {
+    try {
+      const localVersion = (await AsyncStorage.getItem(versionKey)) || "0.0.0";
 
-        const dbName = "yugioh-scanner.db";
-        // SQLite MUST be capitalized in the path
-        const dbFolder = `${FileSystem.documentDirectory}SQLite/`;
-        const dbPath = `${dbFolder}${dbName}`;
+      const rParts = remoteVersion.split(".");
+      const lParts = localVersion.split(".");
 
-        // 1. Ensure the directory exists
-        await FileSystem.makeDirectoryAsync(dbFolder, {
-          intermediates: true,
-        }).catch(() => {});
+      const rX = parseInt(rParts[0] || "0");
+      const rY = parseInt(rParts[1] || "0");
+      const lX = parseInt(lParts[0] || "0");
+      const lY = parseInt(lParts[1] || "0");
 
-        // 2. Load and Force Copy (Overwrite every time for this test)
-        const asset = await Asset.fromModule(
-          require("../assets/yugioh-scanner.db"),
-        ).downloadAsync();
+      await AsyncStorage.setItem(versionKey, remoteVersion);
 
-        if (asset.localUri) {
-          await FileSystem.copyAsync({
-            from: asset.localUri,
-            to: dbPath,
-          });
-          console.log("📂 Database copied to:", dbPath);
-        }
+      return rX !== lX || rY !== lY;
+    } catch (e) {
+      console.warn("Could not fetch version after initial download.");
+      return true;
+    }
+  }
 
-        // 3. Open it using the SAME name
-        // const db = await SQLite.openDatabaseAsync(dbName);
-        // const tables = await db.getAllAsync(
-        //   "SELECT name FROM sqlite_master WHERE type='table';",
-        // );
-        // console.log("🛠️ VERIFIED TABLES:", JSON.stringify(tables));
-        setIsDbLoaded(true);
-      } catch (error) {
-        console.error("Error loading database:", error);
+  async function downloadDatabase() {
+    const tempPath = `${FileSystem.cacheDirectory}${dbName}.tmp`;
+
+    try {
+      console.log("⚙️ SYNCING DATA FROM ARCHIVE...");
+
+      const response = await fetch(`${apiUrl}/files/database.sqlite`);
+      const { url } = await response.json();
+
+      console.log("🔗 Direct Blob URL:", url);
+
+      // 2. Download directly from Vercel (Bypassing the redirect issue)
+      const download = await FileSystem.downloadAsync(url, tempPath);
+
+      // 1. Download to CACHE first (Not the live SQLite folder)
+
+      if (download.status !== 200) {
+        throw new Error(`Download failed with status ${download.status}`);
+      } else if (download.status === 200) {
+        console.log("✅ DATABASE SYNCED FROM VERCEL BLOB");
       }
+
+      // 2. CRITICAL: Close existing connections if they exist
+      // If you use expo-sqlite (new API), ensure you aren't holding a lock.
+      // Some developers use a 'db.closeSync()' if available.
+
+      // 3. Move the temp file to the live path (Overwrites safely)
+      await FileSystem.moveAsync({
+        from: tempPath,
+        to: dbPath,
+      });
+
+      // 4. Set permissions to Read-Write
+      // await FileSystem.setPermissionsAsync(dbPath, { read: true, write: true });
+
+      console.log("✅ PROTOCOL COMPLETE: Database updated.");
+      return true;
+    } catch (error: any) {
+      console.error("🚨 SYNC FAILED:", error.message || "");
+
+      // Cleanup temp file if it failed
+      const tempCheck = await FileSystem.getInfoAsync(tempPath);
+      if (tempCheck.exists) await FileSystem.deleteAsync(tempPath);
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    async function initializeGeartownDb() {
+      if (isDbLoaded) return;
+      // 1. Check if the file exists and has actual data
+      // await FileSystem.deleteAsync(dbPath); // UNCOMMENT, RUN ONCE, THEN REMOVE
+      // return;
+      const fileInfo = await FileSystem.getInfoAsync(dbPath);
+      const lastSync = await AsyncStorage.getItem("last_db_sync");
+
+      // 🚨 THE GUARD: Only download if it's missing, empty, or 7 days old
+      const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
+      const isOld =
+        !lastSync || Date.now() - Number(lastSync) > 7 * 24 * 60 * 60 * 1000;
+      const vRes = await fetch(`${apiUrl}/version`);
+      const vData = await vRes.json();
+      const needUpdateVersion = await checkVersion(vData.version);
+
+      if (isFileBroken || isOld || needUpdateVersion) {
+        console.log("📥 Syncing database (Missing/Broken/Old)...");
+
+        // Perform your download from Vercel Blob here
+        const success = await downloadDatabase();
+
+        if (success) {
+          // Record the success so we don't do it again tomorrow
+          await AsyncStorage.setItem("last_db_sync", Date.now().toString());
+          console.log("✅ Database persisted. Next check in 7 days.");
+        }
+      } else {
+        console.log(
+          "📦 Using local database (Size:",
+          fileInfo.size,
+          "bytes). No download needed.",
+        );
+      }
+      setIsDbLoaded(true);
     }
 
-    loadDatabase();
+    //   async function loadDatabase() {
+    //     try {
+    //       if (isDbLoaded) return;
+    //       console.log("INIT LOAD DB");
+
+    //
+
+    //       // 1. Ensure the directory exists
+    //       await FileSystem.makeDirectoryAsync(dbFolder, {
+    //         intermediates: true,
+    //       }).catch(() => {});
+
+    //       const fileInfo = await FileSystem.getInfoAsync(dbPath);
+
+    //       // 1. If the DB not exists, then download
+    //       if (!fileInfo.exists && apiUrl) {
+    //         console.log("📂 Database missing. Initial download...");
+    //         try {
+    //           await AsyncStorage.setItem(versionKey, "0.0.0");
+    //         } catch (e) {
+    //           console.warn("Could not fetch version after initial download.");
+    //         }
+    //       } else {
+    //         // 1.2 If exists, force to copy always to the sqllite folder from assets
+    //         console.log("📂 Database exists. Syncing with assets as baseline...");
+    //         // const item = require(
+    //         //   `${FileSystem.documentDirectory}SQLite/${dbName}`,
+    //         // );
+    //         // const asset = await Asset.fromModule(item).downloadAsync();
+    //         const asset = {
+    //           localUri: dbPath,
+    //         }; // Mock asset for testing
+    //         if (asset.localUri) {
+    //           await FileSystem.copyAsync({
+    //             from: asset.localUri,
+    //             to: dbPath,
+    //           });
+    //           // Reset version tag after asset overwrite to ensure update check if needed
+    //         }
+    //       }
+
+    //       ///var/mobile/Containers/Data/Application/4AC40604-CCE3-4AFD-A205-081B85D0C2F0/Documents/SQLite/yugioh_database.sqlite
+
+    //       // 1.1 Logic to re-download if X.Y version changes
+
+    //       file: try {
+    //         const remoteVersion = vData.version;
+
+    //         const localVersion =
+    //           (await AsyncStorage.getItem(versionKey)) || "0.0.0";
+
+    //         const rParts = remoteVersion.split(".");
+    //         const lParts = localVersion.split(".");
+
+    //         const rX = parseInt(rParts[0] || "0");
+    //         const rY = parseInt(rParts[1] || "0");
+    //         const lX = parseInt(lParts[0] || "0");
+    //         const lY = parseInt(lParts[1] || "0");
+
+    //         if (rX !== lX || rY !== lY) {
+    //           console.log(
+    //             `📂 API version changed (${localVersion} -> ${remoteVersion}). Updating DB...`,
+    //           );
+    //           await downloadDatabase();
+    //           await AsyncStorage.setItem(versionKey, remoteVersion);
+    //         }
+    //         setIsDbLoaded(true);
+    //       } catch (e) {
+    //         console.log("Version check skipped or failed.");
+    //       }
+    //     } catch (error) {
+    //       console.error("Error loading database:", error);
+    //       setIsDbLoaded(true);
+    //     }
+    //   }
+
+    // loadDatabase();
+    initializeGeartownDb();
   }, [isDbLoaded]);
 
   if (!loaded || !isDbLoaded) {
@@ -114,7 +240,7 @@ export default function RootLayout() {
         <Suspense fallback={<LoadingScreen />}>
           <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
             <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen
                 name="permissions"
                 options={{ presentation: "modal", headerShown: true }}
