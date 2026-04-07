@@ -50,8 +50,8 @@ export default function ScannerComponent({
 
   const [zoom, setZoom] = useState(1.5);
   const [lastDetectedName, setLastDetectedName] = useState<string | null>(null);
-  const [scanMode, setScanMode] = useState<ScanMode>("stopAndGo");
-  const [previousMode, setPreviousMode] = useState<ScanMode>("stopAndGo");
+  const [scanMode, setScanMode] = useState<ScanMode>("pause");
+  const [previousMode, setPreviousMode] = useState<ScanMode>("pause");
 
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [recentDetection, setRecentDetection] = useState<any>(null);

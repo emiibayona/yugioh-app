@@ -6,30 +6,68 @@ import {
   TouchableOpacity,
   Image,
   Switch,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 
 export default function ProfileScreen() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [notifications, setNotifications] = useState(true);
+  const { user, logout, updateProfile, isLoading } = useAuth();
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(user?.name || "");
+  const [lastname, setLastname] = useState(user?.lastname || "");
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Mock User Data
-  const user = {
-    name: "Duelist Master",
-    email: "duelist@yugioh.com",
-    // avatar: 'https://images.ygoprodeck.com/images/cards_small/46986414.jpg', // Dark Magician as avatar
-    avatar:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-Rwkzsfm1EXLlcgLInjlSBJ9ALIb9OAyTPQ&s",
-    memberSince: "Jan 2024",
-    totalCards: 207,
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/login");
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    // In the future: handle logout logic with API
+  const pickImage = async () => {
+    if (!isEditing) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
   };
 
-  if (!isLoggedIn) {
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateProfile({ name, lastname, imageUri });
+      setIsEditing(false);
+      setImageUri(null);
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (e: any) {
+      Alert.alert("Error", "Failed to update profile > " + e?.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#00FFCC" />
+      </View>
+    );
+  }
+
+  if (!user) {
     return (
       <View style={styles.container}>
         <View style={styles.loginContainer}>
@@ -40,7 +78,7 @@ export default function ProfileScreen() {
           </Text>
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={() => setIsLoggedIn(true)}
+            onPress={() => router.push("/login")}
           >
             <Text style={styles.loginBtnText}>Login</Text>
           </TouchableOpacity>
@@ -50,17 +88,82 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.profileHeader}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
-        <Text style={styles.userName}>{user.name}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
-        <Text style={styles.memberDate}>Member since {user.memberSince}</Text>
+        <TouchableOpacity
+          onPress={pickImage}
+          disabled={!isEditing}
+          style={styles.avatarContainer}
+        >
+          <Image
+            source={{
+              uri:
+                imageUri || user?.picture || "https://via.placeholder.com/150",
+            }}
+            style={styles.avatar}
+          />
+          {isEditing && (
+            <View style={styles.avatarOverlay}>
+              <Ionicons name="camera" size={24} color="#FFF" />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {isEditing ? (
+          <View style={styles.editForm}>
+            <TextInput
+              style={styles.editInput}
+              value={name}
+              onChangeText={setName}
+              placeholder="First Name"
+              placeholderTextColor="#666"
+            />
+            <TextInput
+              style={styles.editInput}
+              value={lastname}
+              onChangeText={setLastname}
+              placeholder="Last Name"
+              placeholderTextColor="#666"
+            />
+            <View style={styles.editActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setIsEditing(false)}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.userName}>
+              {user?.name} {user?.lastname}
+            </Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+            <TouchableOpacity
+              style={styles.editProfileBtn}
+              onPress={() => setIsEditing(true)}
+            >
+              <Text style={styles.editProfileBtnText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
-      <View style={styles.statsRow}>
+      {/* <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user.totalCards}</Text>
+          <Text style={styles.statValue}>207</Text>
           <Text style={styles.statLabel}>Cards</Text>
         </View>
         <View style={styles.statDivider} />
@@ -73,22 +176,10 @@ export default function ProfileScreen() {
           <Text style={styles.statValue}>3</Text>
           <Text style={styles.statLabel}>Decks</Text>
         </View>
-      </View>
+      </View> */}
 
-      <View style={styles.settingsSection}>
+      {/* <View style={styles.settingsSection}>
         <Text style={styles.sectionTitle}>Preferences</Text>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelGroup}>
-            <Ionicons name="notifications-outline" size={20} color="#FFF" />
-            <Text style={styles.settingLabel}>Notifications</Text>
-          </View>
-          <Switch
-            value={notifications}
-            onValueChange={setNotifications}
-            trackColor={{ false: "#333", true: "#00FFCC" }}
-          />
-        </View>
 
         <TouchableOpacity style={styles.settingItem}>
           <View style={styles.settingLabelGroup}>
@@ -105,13 +196,13 @@ export default function ProfileScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color="#666" />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={20} color="#FF5555" />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -119,13 +210,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    paddingTop: 80,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
   },
   loginContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40,
+    marginTop: 100,
   },
   loginTitle: {
     fontSize: 24,
@@ -154,7 +251,15 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: "center",
+    paddingTop: 80,
     marginBottom: 30,
+  },
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 15,
+    position: "relative",
   },
   avatar: {
     width: 100,
@@ -162,7 +267,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 3,
     borderColor: "#00FFCC",
-    marginBottom: 15,
+  },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
   },
   userName: {
     color: "#FFF",
@@ -174,10 +285,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
-  memberDate: {
-    color: "#666",
+  editProfileBtn: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#00FFCC",
+  },
+  editProfileBtnText: {
+    color: "#00FFCC",
     fontSize: 12,
-    marginTop: 8,
+    fontWeight: "bold",
+  },
+  editForm: {
+    width: "100%",
+    paddingHorizontal: 40,
+    alignItems: "center",
+  },
+  editInput: {
+    width: "100%",
+    height: 45,
+    backgroundColor: "#111",
+    borderRadius: 10,
+    color: "#FFF",
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#222",
+  },
+  editActions: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  cancelBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginRight: 10,
+  },
+  cancelBtnText: {
+    color: "#AAA",
+    fontWeight: "bold",
+  },
+  saveBtn: {
+    backgroundColor: "#00FFCC",
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderRadius: 10,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  saveBtnText: {
+    color: "#000",
+    fontWeight: "bold",
   },
   statsRow: {
     flexDirection: "row",
@@ -241,7 +401,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: "auto",
+    marginTop: 300,
     marginBottom: 40,
     paddingVertical: 15,
   },

@@ -18,6 +18,8 @@ import * as FileSystem from "expo-file-system";
 import { Asset } from "expo-asset";
 import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthProvider } from "@/context/AuthContext";
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -28,9 +30,9 @@ export default function RootLayout() {
   });
 
   const apiUrl =
-    process?.env?.EXPO_PUBLIC_API_URL || "http://192.168.1.49:8082/api";
+    process?.env?.EXPO_PUBLIC_API_URL || "http://192.168.1.62:8082/api";
   const versionKey = "db_version_tag";
-
+  console.log("🚀 RootLayout started. API URL:", apiUrl);
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -59,7 +61,7 @@ export default function RootLayout() {
 
       return rX !== lX || rY !== lY;
     } catch (e) {
-      console.warn("Could not fetch version after initial download.");
+      console.warn("Could not fetch version after initial download.", e);
       return true;
     }
   }
@@ -113,32 +115,39 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function initializeGeartownDb() {
+      console.log("Initializing database...");
       if (isDbLoaded) return;
 
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
 
       // 🚨 THE GUARD: Only download if it's missing, empty, or 7 days old
       const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
-      const vRes = await fetch(`${apiUrl}/version`);
-      const vData = await vRes.json();
-      const needUpdateVersion = await checkVersion(vData.version);
+      try {
+        console.log("Checking database version from server...", apiUrl);
+        const vRes = await fetch(`${apiUrl}/version`);
+        const vData = await vRes.json();
+        console.log("🚀 ~ initializeGeartownDb ~ vData:", vData);
+        const needUpdateVersion = await checkVersion(vData.version);
 
-      if (isFileBroken || needUpdateVersion) {
-        console.log("📥 Syncing database (Missing/Broken)...");
+        if (isFileBroken || needUpdateVersion) {
+          console.log("📥 Syncing database (Missing/Broken)...");
 
-        // Perform your download from Vercel Blob here
-        const success = await downloadDatabase();
+          // Perform your download from Vercel Blob here
+          const success = await downloadDatabase();
 
-        if (success) {
-          // Record the success so we don't do it again tomorrow
-          console.log("✅ Database persisted. Next check in 7 days.");
+          if (success) {
+            // Record the success so we don't do it again tomorrow
+            console.log("✅ Database persisted. Next check in 7 days.");
+          }
+        } else {
+          console.log(
+            "📦 Using local database (Size:",
+            fileInfo.size,
+            "bytes). No download needed.",
+          );
         }
-      } else {
-        console.log(
-          "📦 Using local database (Size:",
-          fileInfo.size,
-          "bytes). No download needed.",
-        );
+      } catch (e) {
+        console.error("Failed to check version", e);
       }
       setIsDbLoaded(true);
     }
@@ -146,41 +155,56 @@ export default function RootLayout() {
     initializeGeartownDb();
   }, [isDbLoaded]);
 
+  console.log(
+    "🚀 RootLayout rendered. Loaded:",
+    loaded,
+    "DB Loaded:",
+    isDbLoaded,
+  );
   if (!loaded || !isDbLoaded) {
     return <LoadingScreen />;
   }
 
   return (
-    <GestureHandlerRootView>
-      <ThemeProvider value={DarkTheme}>
-        <Suspense fallback={<LoadingScreen />}>
-          <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="permissions"
-                options={{ presentation: "modal", headerShown: true }}
-              />
-              <Stack.Screen
-                name="media"
-                options={{ presentation: "modal", headerShown: false }}
-              />
-              <Stack.Screen
-                name="+not-found"
-                options={{ presentation: "modal" }}
-              />
-            </Stack>
-          </SQLite.SQLiteProvider>
-        </Suspense>
-      </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <ThemeProvider value={DarkTheme}>
+          <Suspense fallback={<LoadingScreen />}>
+            <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="permissions"
+                  options={{ presentation: "modal", headerShown: true }}
+                />
+                <Stack.Screen
+                  name="media"
+                  options={{ presentation: "modal", headerShown: false }}
+                />
+                <Stack.Screen
+                  name="+not-found"
+                  options={{ presentation: "modal" }}
+                />
+              </Stack>
+            </SQLite.SQLiteProvider>
+          </Suspense>
+        </ThemeProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
 
 function LoadingScreen() {
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" />
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#000",
+      }}
+    >
+      <ActivityIndicator size="large" color="#00FFCC" />
       <Text style={{ marginTop: 20, color: "white" }}>Loading...</Text>
     </View>
   );
