@@ -20,6 +20,7 @@ interface User {
   name: string;
   lastname: string;
   picture: string;
+  tenant: string;
 }
 
 interface AuthContextType {
@@ -68,7 +69,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (response.ok) {
         const profileData = await response.json();
-        setUser({ ...profileData, tenant: profileData.tenant || tenant });
+        const userData: User = {
+          ...profileData,
+          tenant: profileData.tenant || tenant,
+        };
+        setUser(userData);
+
+        const userOnRegister = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/users/${profileData?.email}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          },
+        ).then((res) => res.json());
+
+        if (!userOnRegister) {
+          await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+          });
+        }
       } else if (response.status === 401) {
         await logout();
       }
@@ -126,15 +147,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(err.message || "Registration failed");
     }
 
-    // Secondary call if needed by the backend architecture
-    try {
-      await fetch(`${API_BASE_URL}/users/`, {
+    const userOnRegister = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/users/${user?.email}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      },
+    ).then((res) => res.json());
+
+    if (userOnRegister.ok) {
+      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-    } catch (e) {
-      console.warn("Secondary registration call failed, but primary succeeded");
     }
 
     // Usually auto-login after register or just return

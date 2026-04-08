@@ -19,6 +19,7 @@ import { Asset } from "expo-asset";
 import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthProvider } from "@/context/AuthContext";
+import { BindersProvider } from "@/context/BinderContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -168,27 +169,29 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <ThemeProvider value={DarkTheme}>
-          <Suspense fallback={<LoadingScreen />}>
-            <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="permissions"
-                  options={{ presentation: "modal", headerShown: true }}
-                />
-                <Stack.Screen
-                  name="media"
-                  options={{ presentation: "modal", headerShown: false }}
-                />
-                <Stack.Screen
-                  name="+not-found"
-                  options={{ presentation: "modal" }}
-                />
-              </Stack>
-            </SQLite.SQLiteProvider>
-          </Suspense>
-        </ThemeProvider>
+        <BindersProvider>
+          <ThemeProvider value={DarkTheme}>
+            <Suspense fallback={<LoadingScreen />}>
+              <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="permissions"
+                    options={{ presentation: "modal", headerShown: true }}
+                  />
+                  <Stack.Screen
+                    name="media"
+                    options={{ presentation: "modal", headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="+not-found"
+                    options={{ presentation: "modal" }}
+                  />
+                </Stack>
+              </SQLite.SQLiteProvider>
+            </Suspense>
+          </ThemeProvider>
+        </BindersProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

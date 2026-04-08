@@ -18,7 +18,6 @@ export default function EscanerScreen() {
   const redirectToPermissions = !hasPermission;
 
   const handleCardDetected = (card: any) => {
-    console.log("Card detected in Escaner:", card.name);
     setDetectedCard(card);
   };
 

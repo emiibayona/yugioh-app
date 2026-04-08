@@ -112,9 +112,12 @@ export default function useScannerSession(db?: SQLiteDatabase) {
     if (sessionCards?.length === 0) return { success: true, count: 0 };
 
     try {
+      // PREMIUM USERS keep your session data in AsyncStorage and sync to your collection when you click "sync" or when you close the app
+      //or when you move all the session cards to binder/deck/collection, whatever makes more sense
+      // Always on the cloud. If the user delete the app and reinstall it, the session data will be lost, but the collection data will be safe in the cloud. If the user want to keep the session data, they can export it before deleting the app, and import it again after reinstalling it.
       // Im going to upload to a sync api when the user clicks "sync", or when the user close the app, or when the user moved all the session to binder/deck/collection, whatever makes more sense
       // but for now let's just log the session data to see it working end-to-end
-      console.log("Syncing session data to collection:", sessionCards);
+      // console.log("Syncing session data to collection:", sessionCards);
 
       // 1. Ensure userCollection table exists
       // await db.execAsync(`

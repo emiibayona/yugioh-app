@@ -9,9 +9,10 @@ export default function useCardImage() {
   const baseUrl = process?.env?.EXPO_PUBLIC_API_URL;
 
   const getCardImageUrl = useCallback(
-    (cardName: string, cardId: string) => {
+    (cardName: string, cardId: string, item: any = null) => {
       if (!cardName || !cardId) return "";
 
+      if (item?.localUrl) return item.localUrl; // Return local URL if it exists
       // Original image URL from ygoprodeck
       const originalImageUrl = `https://images.ygoprodeck.com/images/cards/${cardId}.jpg`;
 
@@ -19,10 +20,10 @@ export default function useCardImage() {
       const encodedName = encodeURIComponent(cardName);
       const encodedOriginalUrl = encodeURIComponent(originalImageUrl);
 
-      console.log(
-        "🚀 ~ getCardImageUrl ~ baseUrl:",
-        `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`,
-      );
+      // console.log(
+      //   "🚀 ~ getCardImageUrl ~ baseUrl:",
+      //   `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`,
+      // );
       // Add logic to download and save the image locally if needed, then return the local URI instead of the proxy URL
       return `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`;
     },

@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { useBinders } from "@/hooks/useBinders";
 
 export default function ProfileScreen() {
   const { user, logout, updateProfile, isLoading } = useAuth();
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const { userNumbers } = useBinders();
   const handleLogout = async () => {
     await logout();
     router.replace("/login");
@@ -161,22 +163,22 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* <View style={styles.statsRow}>
+      <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>207</Text>
+          <Text style={styles.statValue}>{userNumbers.cards}</Text>
           <Text style={styles.statLabel}>Cards</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>12</Text>
+          <Text style={styles.statValue}>{userNumbers.binders}</Text>
           <Text style={styles.statLabel}>Binders</Text>
         </View>
-        <View style={styles.statDivider} />
+        {/* <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>3</Text>
           <Text style={styles.statLabel}>Decks</Text>
-        </View>
-      </View> */}
+        </View> */}
+      </View>
 
       {/* <View style={styles.settingsSection}>
         <Text style={styles.sectionTitle}>Preferences</Text>

@@ -23,6 +23,7 @@ import ScannerOverlay from "./ScannerOverlay";
 import useScannerSession from "@/hooks/useScannerSession";
 import { Ionicons } from "@expo/vector-icons";
 import useCardImage from "@/hooks/useCardImage";
+import useBinders from "@/hooks/useBinders";
 
 interface ScannerComponentProps {
   onCardDetected: (card: any) => void;
@@ -47,6 +48,12 @@ export default function ScannerComponent({
     clearSession,
   } = useScannerSession(db);
   const { getCardImageUrl } = useCardImage();
+  const {
+    addCardsToBinder,
+    createBinder,
+    binders,
+    loading: bindersLoading,
+  } = useBinders();
 
   const [zoom, setZoom] = useState(1.5);
   const [lastDetectedName, setLastDetectedName] = useState<string | null>(null);
@@ -62,6 +69,10 @@ export default function ScannerComponent({
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
 
+  // Binder selection states
+  const [showBinderSelector, setShowBinderSelector] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const analysisLock = useRef(false);
 
   const analyzeFrame = async () => {
@@ -69,7 +80,8 @@ export default function ScannerComponent({
       scanMode === "pause" ||
       analysisLock.current ||
       !camera.current ||
-      showSessionModal
+      showSessionModal ||
+      showBinderSelector
     )
       return;
 
@@ -94,7 +106,6 @@ export default function ScannerComponent({
         const candidateNames = generalCandidates.filter(
           (t) => t.length >= 3 && t.length < 40,
         );
-        console.log("______________INIT_________________");
 
         const descriptionCandidates = generalCandidates.filter(
           (t) => t.length >= 40,
@@ -108,7 +119,6 @@ export default function ScannerComponent({
           );
 
           if (cardFound && cardFound.name !== lastDetectedName) {
-            console.log("Detected:", cardFound.name);
             setLastDetectedName(cardFound.name);
 
             addCard(cardFound);
@@ -133,13 +143,13 @@ export default function ScannerComponent({
 
   useEffect(() => {
     let interval: any;
-    if (scanMode !== "pause" && !showSessionModal) {
+    if (scanMode !== "pause" && !showSessionModal && !showBinderSelector) {
       interval = setInterval(analyzeFrame, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [scanMode, lastDetectedName, showSessionModal]);
+  }, [scanMode, lastDetectedName, showSessionModal, showBinderSelector]);
 
   const handleModeChange = (newMode: ScanMode) => {
     if (newMode === "pause") {
@@ -187,6 +197,81 @@ export default function ScannerComponent({
     setSearchResults([]);
     setShowSearchInput(false);
     Alert.alert("Card added", `${card.name} added to session.`);
+  };
+
+  const handleOpenBinderSelector = async () => {
+    if (sessionCards.length === 0) {
+      Alert.alert("Empty Session", "Scan some cards first!");
+      return;
+    }
+
+    setShowSessionModal(false);
+
+    // Smooth transition
+    setTimeout(() => {
+      setShowBinderSelector(true);
+    }, 100);
+  };
+
+  const handleSyncToBinder = async (
+    binderId: string,
+    binderName: string,
+    isFuse: boolean = false,
+  ) => {
+    setIsSyncing(true);
+    // bitch
+    try {
+      const success = await addCardsToBinder(binderId, sessionCards);
+      if (success) {
+        Alert.alert(
+          "Success",
+          `${isFuse ? "Fused" : "Added"} ${sessionCards.length} cards to ${binderName}`,
+        );
+        await clearSession();
+        setShowBinderSelector(false);
+      } else {
+        Alert.alert("Error", "Failed to sync cards to binder");
+      }
+    } catch (e) {
+      Alert.alert("Error", "An unexpected error occurred during sync");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleCreateAndSync = () => {
+    Alert.prompt(
+      "New Binder",
+      "Enter a name for your new binder:",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Create & Add",
+          onPress: async (name) => {
+            if (!name) return;
+            setIsSyncing(true);
+            try {
+              const newBinderId = await createBinder(name);
+              if (newBinderId) {
+                await handleSyncToBinder(newBinderId, name);
+              } else {
+                Alert.alert("Error", "Failed to create binder");
+              }
+            } catch (e) {
+              Alert.alert("Error", "Failed to create binder");
+            } finally {
+              setIsSyncing(false);
+            }
+          },
+        },
+      ],
+      "plain-text",
+    );
+  };
+
+  const handleCloseBinderSelector = () => {
+    setShowBinderSelector(false);
+    setTimeout(() => setShowSessionModal(true), 100);
   };
 
   if (!device)
@@ -282,7 +367,10 @@ export default function ScannerComponent({
           <View style={styles.previewContainer}>
             <Image
               source={{
-                uri: getCardImageUrl(recentDetection.name, recentDetection.id),
+                uri: getCardImageUrl(
+                  recentDetection.name,
+                  recentDetection.cardId || recentDetection.id,
+                ),
               }}
               style={styles.previewImage}
             />
@@ -393,7 +481,7 @@ export default function ScannerComponent({
                 {searchResults.length > 0 && (
                   <FlatList
                     data={searchResults}
-                    keyExtractor={(item) => `search-${item.id}`}
+                    keyExtractor={(item) => `search-${item.cardId || item.id}`}
                     style={styles.searchResultsList}
                     renderItem={({ item }) => (
                       <TouchableOpacity
@@ -402,7 +490,10 @@ export default function ScannerComponent({
                       >
                         <Image
                           source={{
-                            uri: getCardImageUrl(item.name, item.id),
+                            uri: getCardImageUrl(
+                              item.name,
+                              item.cardId || item.id,
+                            ),
                           }}
                           style={styles.searchItemImage}
                         />
@@ -520,13 +611,102 @@ export default function ScannerComponent({
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.footerBtn, styles.binderBtn]}
-                onPress={() =>
-                  Alert.alert("Coming soon", "Add to binders functionality")
-                }
+                onPress={handleOpenBinderSelector}
+                disabled={isSyncing}
               >
-                <Text style={styles.binderBtnText}>Add to Binders</Text>
+                {isSyncing ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Text style={styles.binderBtnText}>Add to Binders</Text>
+                )}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Binder Selector Modal */}
+      <Modal
+        visible={showBinderSelector}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={handleCloseBinderSelector}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { height: "60%" }]}>
+            {/* Syncing Overlay - prevent interaction and show smooth spinner */}
+            {isSyncing && (
+              <View style={styles.syncingOverlay}>
+                <ActivityIndicator size="large" color="#00FFCC" />
+                <Text style={styles.syncingText}>Syncing cards...</Text>
+              </View>
+            )}
+
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={handleCloseBinderSelector}>
+                <Ionicons name="arrow-back" size={24} color="#00FFCC" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Select Binder</Text>
+              <TouchableOpacity onPress={() => setShowBinderSelector(false)}>
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.newBinderBtn}
+              onPress={handleCreateAndSync}
+            >
+              <Ionicons name="add-circle-outline" size={24} color="#00FFCC" />
+              <Text style={styles.newBinderText}>
+                Create New Binder with current selection
+              </Text>
+            </TouchableOpacity>
+
+            {bindersLoading ? (
+              <View style={styles.center}>
+                <ActivityIndicator size="large" color="#00FFCC" />
+              </View>
+            ) : (
+              <FlatList
+                data={binders}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.binderSelectItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.binderSelectName}>{item.name}</Text>
+                      <Text style={styles.binderSelectCount}>
+                        {item.cardCount} cards
+                      </Text>
+                    </View>
+                    <View style={styles.binderActionRow}>
+                      <TouchableOpacity
+                        style={styles.binderActionBtn}
+                        onPress={() =>
+                          handleSyncToBinder(item.id, item.name, false)
+                        }
+                      >
+                        <Text style={styles.binderActionText}>MOVE</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.binderActionBtn, styles.fuseActionBtn]}
+                        onPress={() =>
+                          handleSyncToBinder(item.id, item.name, true)
+                        }
+                      >
+                        <Text style={styles.binderActionText}>FUSE</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      No existing binders found.
+                    </Text>
+                  </View>
+                }
+              />
+            )}
           </View>
         </View>
       </Modal>
@@ -540,6 +720,11 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   error: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -695,6 +880,19 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,255,204,0.3)",
+  },
+  syncingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    zIndex: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 25,
+  },
+  syncingText: {
+    color: "#00FFCC",
+    marginTop: 15,
+    fontWeight: "bold",
   },
   modalHeader: {
     flexDirection: "row",
@@ -874,5 +1072,59 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 13,
     color: "#FFF",
+  },
+  binderSelectItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  binderSelectName: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+    flex: 1,
+  },
+  binderSelectCount: {
+    color: "#666",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  binderActionRow: {
+    flexDirection: "row",
+    marginLeft: 10,
+  },
+  binderActionBtn: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  fuseActionBtn: {
+    backgroundColor: "#00FFCC",
+  },
+  binderActionText: {
+    color: "#FFF",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  newBinderBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "rgba(0, 255, 204, 0.1)",
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 255, 204, 0.3)",
+    justifyContent: "center",
+  },
+  newBinderText: {
+    color: "#00FFCC",
+    fontWeight: "bold",
+    marginLeft: 10,
   },
 });

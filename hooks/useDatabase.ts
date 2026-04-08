@@ -128,8 +128,8 @@ export default function useDatabase(db: SQLiteDatabase) {
     try {
       // 100% exact match as requested
       const cardFound: any = await db.getFirstAsync(
-        "SELECT * FROM cards WHERE effect = ? LIMIT 1",
-        [normalized],
+        "SELECT * FROM cards WHERE desc like ? LIMIT 1",
+        [`%${normalized}%`],
       );
 
       if (cardFound && withImage) {
@@ -161,12 +161,10 @@ export default function useDatabase(db: SQLiteDatabase) {
       if (filteredNames.length > 0) {
         try {
           const placeholders = filteredNames.map(() => "?").join(",");
-          console.log("🚀 ~ findCardByNames ~ filteredNames:", filteredNames);
           let cardFound: any = await db.getFirstAsync(
             `SELECT * FROM cards WHERE UPPER(name) IN (${placeholders}) LIMIT 1`,
             filteredNames,
           );
-          console.log("🚀 ~ findCardByNames ~ cardFound:", cardFound);
 
           if (cardFound) {
             if (withImage) {
