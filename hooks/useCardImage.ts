@@ -1,31 +1,53 @@
+import * as FileSystem from "expo-file-system";
 import Config from "@/constants/Config";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 
-/**
- * Hook to construct the proxy image URL for cards.
- * URL format: {{url}}/files/cards/{{cardName}}?url={{originalImageUrl}}
- */
+// Permanent directory for card images
+const CARD_CACHE_DIR = `${FileSystem.documentDirectory}ImagesCards/`;
+
 export default function useCardImage() {
-  // Using EXPO_PUBLIC prefix for automatic loading from .env in Expo projects
+  // Ensure the directory exists on mount
+  useEffect(() => {
+    const ensureDir = async () => {
+      const dirInfo = await FileSystem.getInfoAsync(CARD_CACHE_DIR);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(CARD_CACHE_DIR, {
+          intermediates: true,
+        });
+      }
+    };
+    ensureDir();
+  }, []);
+
+  const getLocalPath = (cardId: string) => `${CARD_CACHE_DIR}${cardId}.jpg`;
 
   const getCardImageUrl = useCallback(
-    (cardName: string, cardId: string, item: any = null) => {
+    async (cardName: string, cardId: string, item: any = null) => {
       if (!cardName || !cardId) return "";
 
-      if (item?.localUrl) return item.localUrl; // Return local URL if it exists
-      // Original image URL from ygoprodeck
-      const originalImageUrl = `https://images.ygoprodeck.com/images/cards/${cardId}.jpg`;
+      // 1. Check if we already have it locally
+      const localUri = getLocalPath(cardId);
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
 
-      // Encode components for safety
+      if (fileInfo.exists) {
+        return localUri;
+      }
+
+      if (item?.localUrl) return item.localUrl; // Return local URL if it exists
+
+      // 2. If not local, prepare the Remote/Proxy URL
+      const originalImageUrl = `https://images.ygoprodeck.com/images/cards/${cardId}.jpg`;
       const encodedName = encodeURIComponent(cardName);
       const encodedOriginalUrl = encodeURIComponent(originalImageUrl);
+      const remoteUrl = `${Config.API_URL}/files/cards/${encodedName}?url=${encodedOriginalUrl}`;
 
-      // console.log(
-      //   "🚀 ~ getCardImageUrl ~ baseUrl:",
-      //   `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`,
-      // );
-      // Add logic to download and save the image locally if needed, then return the local URI instead of the proxy URL
-      return `${Config.API_URL}/files/cards/${encodedName}?url=${encodedOriginalUrl}`;
+      // 3. Download it in the background for future use
+      // We don't "await" this so the UI can show the remote image immediately
+      FileSystem.downloadAsync(remoteUrl, localUri)
+        .then(({ uri }) => console.log(`💾 Saved ${cardName} to ${uri}`))
+        .catch((err) => console.error("❌ Download failed", err));
+
+      return remoteUrl;
     },
     [Config.API_URL],
   );

@@ -1,12 +1,15 @@
-import {
-  DarkTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState, useRef } from "react";
-import { ActivityIndicator, Text, View, AppState, AppStateStatus } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  View,
+  AppState,
+  AppStateStatus,
+} from "react-native";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -35,10 +38,10 @@ export default function RootLayout() {
   const segments = useSegments();
   const appState = useRef(AppState.currentState);
   const { t } = useTranslation();
-  
+
   const apiUrl = Config.API_URL;
   const versionKey = "db_version_tag";
-  
+
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
 
@@ -52,33 +55,46 @@ export default function RootLayout() {
     const cameraStatus = Camera.getCameraPermissionStatus();
     const microStatus = Camera.getMicrophonePermissionStatus();
     const mediaStatus = await ExpoMediaLibrary.getPermissionsAsync();
-    
-    const allGranted = 
-      cameraStatus === "granted" && 
-      microStatus === "granted" && 
+
+    const allGranted =
+      cameraStatus === "granted" &&
+      microStatus === "granted" &&
       mediaStatus.granted;
-    
-    console.log("🔍 Checking Permissions:", { cameraStatus, microStatus, mediaGranted: mediaStatus.granted });
+
+    console.log("🔍 Checking Permissions:", {
+      cameraStatus,
+      microStatus,
+      mediaGranted: mediaStatus.granted,
+    });
     setHasPermissions(allGranted);
   };
 
   // Check permissions on mount and when segments change
   useEffect(() => {
-    checkPermissions();
+    if ("(tabs)" === segments[0] && segments.length === 1) {
+      checkPermissions();
+    }
+    // checkPermissions();
   }, [segments]);
 
   // Handle AppState changes (e.g. returning from Settings)
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState: AppStateStatus) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
-        console.log("📱 App has come to the foreground, re-checking permissions...");
-        checkPermissions();
-      }
-      appState.current = nextAppState;
-    });
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        console.log("🚀 ~ RootLayout ~ nextAppState:", nextAppState);
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
+          console.log(
+            "📱 App has come to the foreground, re-checking permissions...",
+          );
+          checkPermissions();
+        }
+        appState.current = nextAppState;
+      },
+    );
 
     return () => {
       subscription.remove();
@@ -113,7 +129,8 @@ export default function RootLayout() {
       const response = await fetch(`${apiUrl}/files/database.sqlite`);
       const { url } = await response.json();
       const download = await FileSystem.downloadAsync(url, tempPath);
-      if (download.status !== 200) throw new Error(`Download failed: ${download.status}`);
+      if (download.status !== 200)
+        throw new Error(`Download failed: ${download.status}`);
       await FileSystem.moveAsync({ from: tempPath, to: dbPath });
       console.log("✅ PROTOCOL COMPLETE: Database updated.");
       return true;
@@ -129,11 +146,11 @@ export default function RootLayout() {
     async function initializeGeartownDb() {
       // ONLY initialize if permissions are granted and DB isn't loaded yet
       if (isDbLoaded || hasPermissions !== true) return;
-      
+
       console.log("🚀 Initializing database...");
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
       const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
-      
+
       try {
         const vRes = await fetch(`${apiUrl}/version`);
         const vData = await vRes.json();
@@ -165,8 +182,14 @@ export default function RootLayout() {
   const stackContent = (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="permissions" options={{ presentation: "modal", headerShown: true }} />
-      <Stack.Screen name="media" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen
+        name="permissions"
+        options={{ presentation: "modal", headerShown: true }}
+      />
+      <Stack.Screen
+        name="media"
+        options={{ presentation: "modal", headerShown: false }}
+      />
       <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
     </Stack>
   );
@@ -195,7 +218,14 @@ export default function RootLayout() {
 
 function LoadingScreen({ label }: { label: string }) {
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#000",
+      }}
+    >
       <ActivityIndicator size="large" color="#00FFCC" />
       <Text style={{ marginTop: 20, color: "white" }}>{label}</Text>
     </View>

@@ -28,7 +28,8 @@
     "confirm": "Confirm",
     "error": "Error",
     "success": "Success",
-    "save": "Save"
+    "save": "Save",
+    "settingUpDb": "Setting up database..."
   },
   "tabs": {
     "scanner": "Scanner",

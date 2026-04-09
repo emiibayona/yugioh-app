@@ -12,12 +12,12 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useBinders, { Binder } from "@/hooks/useBinders";
 import useCardImage from "@/hooks/useCardImage";
+import CardImage from "@/components/ImageComponent";
 
 export default function BinderDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { binders } = useBinders();
-  const { getCardImageUrl } = useCardImage();
 
   const binder = binders.find((b) => b.id === id);
 
@@ -52,18 +52,18 @@ export default function BinderDetailScreen() {
         renderItem={({ item }) => {
           return (
             <View style={styles.cardItem}>
-              <Image
-                source={{ uri: getCardImageUrl(item.name, item.id, item) }}
+              <CardImage
+                name={item.name}
+                cardId={item.id}
                 style={styles.cardImage}
+                item={item}
               />
               <View style={styles.cardInfo}>
                 <Text style={styles.cardName} numberOfLines={1}>
                   {item.name}
                 </Text>
                 <View style={styles.cardMeta}>
-                  <Text style={styles.qtyBadge}>
-                    x{item.quantity}
-                  </Text>
+                  <Text style={styles.qtyBadge}>x{item.quantity}</Text>
                   {item.treatment === "foil" && (
                     <View style={styles.foilBadge}>
                       <Ionicons name="sparkles" size={10} color="#000" />

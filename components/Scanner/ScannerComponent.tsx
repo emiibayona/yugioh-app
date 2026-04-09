@@ -32,6 +32,8 @@ import { Ionicons } from "@expo/vector-icons";
 import useCardImage from "@/hooks/useCardImage";
 import useBinders from "@/hooks/useBinders";
 import { useTranslation } from "react-i18next";
+import CardImage from "../ImageComponent";
+import * as ImageManipulator from "expo-image-manipulator";
 
 interface ScannerComponentProps {
   onCardDetected: (card: any) => void;
@@ -63,7 +65,6 @@ export default function ScannerComponent({
     toggleFoil,
     clearSession,
   } = useScannerSession(db);
-  const { getCardImageUrl } = useCardImage();
   const {
     addCardsToBinder,
     createBinder,
@@ -116,16 +117,31 @@ export default function ScannerComponent({
 
     analysisLock.current = true;
     try {
+      console.log(">>>> START", new Date().toLocaleTimeString());
       // Use lower quality for faster processing on Android
       const photo = await camera.current.takeSnapshot({ quality: 60 });
       if (!photo) return;
+      console.log("Take snap", new Date().toLocaleTimeString());
 
       const imageUri = "file://" + photo.path;
-      const result = await TextRecognition.recognize(
+
+      const imageManipulated = await ImageManipulator.manipulateAsync(
         imageUri,
+        [{ resize: { width: 800 } }], // Small enough for speed, large enough for accuracy
+        {
+          format: ImageManipulator.SaveFormat.JPEG,
+          compress: 0.7,
+        },
+      );
+      console.log("Take imageManipulated", new Date().toLocaleTimeString());
+
+      const result = await TextRecognition.recognize(
+        imageManipulated?.uri || imageUri,
         TextRecognitionScript.LATIN,
       );
+      console.log("Take recognition", new Date().toLocaleTimeString());
 
+      console.log("🚀 ~ analyzeFrame ~ result.blocks:", result.blocks);
       if (result && result.blocks) {
         const sortedBlocks = [...result.blocks].sort(
           (a, b) => (a.frame?.top || 0) - (b.frame?.top || 0),
@@ -147,6 +163,7 @@ export default function ScannerComponent({
             descriptionCandidates,
             true,
           );
+          console.log("Take findCard", new Date().toLocaleTimeString());
 
           if (cardFound && cardFound.name !== lastDetectedName) {
             setLastDetectedName(cardFound.name);
@@ -159,12 +176,19 @@ export default function ScannerComponent({
             if (scanMode === "stopAndGo") {
               setScanMode("pause");
             } else {
+              console.log(
+                "Hittig here in lightning mode, waiting longer to avoid multiple detections",
+              );
               // Wait longer in lightning mode between detections to avoid multiple registrations
-              await new Promise((resolve) => setTimeout(resolve, 2500));
+              await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
         }
       }
+      console.log(
+        "<<<< END ====================",
+        new Date().toLocaleTimeString(),
+      );
     } catch (error) {
       console.log("Analysis error:", error);
     } finally {
@@ -180,6 +204,7 @@ export default function ScannerComponent({
       !showBinderSelector &&
       isFocused
     ) {
+      console.log("Starting frame analysis with mode:", scanMode);
       interval = setInterval(analyzeFrame, 1500); // Increased interval for better performance
     }
     return () => {
@@ -448,13 +473,9 @@ export default function ScannerComponent({
       <View style={styles.bottomControls}>
         {recentDetection && (
           <View style={styles.previewContainer}>
-            <Image
-              source={{
-                uri: getCardImageUrl(
-                  recentDetection.name,
-                  recentDetection.cardId || recentDetection.id,
-                ),
-              }}
+            <CardImage
+              name={recentDetection.name}
+              cardId={recentDetection.cardId || recentDetection.id}
               style={styles.previewImage}
             />
 
@@ -585,15 +606,12 @@ export default function ScannerComponent({
                         style={styles.searchItem}
                         onPress={() => handleAddManualCard(item)}
                       >
-                        <Image
-                          source={{
-                            uri: getCardImageUrl(
-                              item.name,
-                              item.cardId || item.id,
-                            ),
-                          }}
+                        <CardImage
+                          name={item.name}
+                          cardId={item.cardId || item.id}
                           style={styles.searchItemImage}
                         />
+
                         <Text style={styles.searchItemName} numberOfLines={1}>
                           {item.name}
                         </Text>
@@ -619,10 +637,9 @@ export default function ScannerComponent({
                 contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => (
                   <View style={styles.cardItem}>
-                    <Image
-                      source={{
-                        uri: getCardImageUrl(item.name, item.id),
-                      }}
+                    <CardImage
+                      name={item.name}
+                      cardId={item.id}
                       style={styles.cardItemImage}
                     />
                     <View style={styles.cardItemInfo}>

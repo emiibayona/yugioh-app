@@ -28,7 +28,8 @@
     "confirm": "Confirmar",
     "error": "Error",
     "success": "Éxito",
-    "save": "Guardar"
+    "save": "Guardar",
+    "settingUpDb": "Configurando la base de datos..."
   },
   "tabs": {
     "scanner": "Escáner",
