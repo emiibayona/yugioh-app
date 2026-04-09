@@ -6,9 +6,9 @@ import React, {
   useEffect,
 } from "react";
 import { useAuth } from "./AuthContext";
+import { Config } from "@/constants/Config";
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://api.colomardo.space/api";
+const API_BASE_URL = Config.API_URL;
 const API_URL = `${API_BASE_URL}/binders`;
 
 export interface Binder {

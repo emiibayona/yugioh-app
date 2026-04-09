@@ -1,3 +1,4 @@
+import Config from "@/constants/Config";
 import { useCallback } from "react";
 
 /**
@@ -6,7 +7,6 @@ import { useCallback } from "react";
  */
 export default function useCardImage() {
   // Using EXPO_PUBLIC prefix for automatic loading from .env in Expo projects
-  const baseUrl = process?.env?.EXPO_PUBLIC_API_URL;
 
   const getCardImageUrl = useCallback(
     (cardName: string, cardId: string, item: any = null) => {
@@ -25,9 +25,9 @@ export default function useCardImage() {
       //   `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`,
       // );
       // Add logic to download and save the image locally if needed, then return the local URI instead of the proxy URL
-      return `${baseUrl}/files/cards/${encodedName}?url=${encodedOriginalUrl}`;
+      return `${Config.API_URL}/files/cards/${encodedName}?url=${encodedOriginalUrl}`;
     },
-    [baseUrl],
+    [Config.API_URL],
   );
 
   return { getCardImageUrl };

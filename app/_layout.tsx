@@ -24,6 +24,8 @@ import { BindersProvider } from "@/context/BinderContext";
 import { Camera } from "react-native-vision-camera";
 import * as ExpoMediaLibrary from "expo-media-library";
 
+import Config from "@/constants/Config";
+
 import "@/locales/i18n";
 import { useTranslation } from "react-i18next";
 
@@ -37,8 +39,7 @@ export default function RootLayout() {
   });
   const segments = useSegments();
   const router = useRouter();
-  const apiUrl =
-    process?.env?.EXPO_PUBLIC_API_URL || "http://192.168.1.62:8082/api";
+  const apiUrl = Config.API_URL;
   const versionKey = "db_version_tag";
   console.log("🚀 RootLayout started. API URL:", apiUrl);
 

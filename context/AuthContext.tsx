@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Config from "@/constants/Config";
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_LOGIN_URL || "https://api.colomardo.space/api";
+const API_BASE_URL = Config.LOGIN_URL;
 
 const TOKEN_KEY = "auth_token";
 
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
 
         const userOnRegister = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/users/${profileData?.email}`,
+          `${Config.API_URL}/users/${profileData?.email}`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ).then((res) => res.json());
 
         if (!userOnRegister) {
-          await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/`, {
+          await fetch(`${Config.API_URL}/users/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userData),
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const userOnRegister = await fetch(
-      `${process.env.EXPO_PUBLIC_API_URL}/users/${user?.email}`,
+      `${Config.API_URL}/users/${user?.email}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ).then((res) => res.json());
 
     if (userOnRegister.ok) {
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/`, {
+      await fetch(`${Config.API_URL}/users/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const response = await fetch(
-      `${process.env.EXPO_PUBLIC_API_URL}/files/image`,
+      `${Config.API_URL}/files/image`,
       {
         method: "POST",
         body: formData,
