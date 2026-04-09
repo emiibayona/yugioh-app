@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: "200%",
+    marginTop: "14%",
     marginBottom: 40,
     paddingVertical: 15,
   },

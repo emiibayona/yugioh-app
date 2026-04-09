@@ -95,7 +95,7 @@
         "description": "Descripción de la carpeta (Opcional)"
       },
       "merge": {
-        "alert":"Fusionando carpetas",
+        "alert": "Fusionando carpetas",
         "title": "Seleccionar carpeta para fusionar",
         "message": "Esto moverá todas las cartas de {{source}} a la carpeta seleccionada y luego eliminará {{target}}.\n\n⚠️ Info: asegúrate de seleccionar la carpeta correcta para fusionar, ya que no podrás revertir esta acción.\n\n¿Quieres continuar?",
         "execute": "Fusionar",
@@ -103,5 +103,43 @@
         "target": "Hacia"
       }
     }
+  },
+  "user": {},
+  "login": {
+    "title": "Iniciar Sesión",
+    "subtitle": "¡Bienvenido de nuevo, duelista!",
+    "email": "Email",
+    "password": "Contraseña",
+    "login": "Iniciar Sesión",
+    "register": "¿No tienes una cuenta?",
+    "registerNow": "Regístrate ahora",
+    "validation": {
+      "loginFailed": "Error al iniciar sesión",
+      "required": "Por favor, completa ambos campos",
+      "invalidCredentials": "Credenciales inválidas",
+      "error": "Error al iniciar sesión. Por favor, intenta de nuevo."
+    }
+  },
+  "register": {
+    "title": "Crea tu cuenta",
+    "subtitle": "Sé el mejor duelista con tu colección organizada.",
+    "register": "Registrarse",
+    "login": "¿Ya tienes una cuenta?",
+    "loginNow": "Inicia sesión ahora",
+    "confirm": "Registrarse",
+    "addPhoto": "Tú foto",
+    "validation": {
+      "registrationFailed": "Error al registrarse",
+      "required": "Por favor, completa todos los campos",
+      "invalidEmail": "Email inválido",
+      "error": "Error al registrarse. Por favor, intenta de nuevo."
+    }
+  },
+  "fields": {
+    "name": "Nombre",
+    "lastname": "Apellido",
+    "email": "Email",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña"
   }
 }

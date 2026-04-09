@@ -103,5 +103,41 @@
         "target": "Target"
       }
     }
+  },
+  "login": {
+    "title": "Login",
+    "subtitle": "Welcome back, Duelist!",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "register": "Don't have an account?",
+    "registerNow": "Register now",
+    "validation": {
+      "required": "Please fill all fields",
+      "loginFailed": "Login Failed",
+      "invalidCredentials": "Check your credentials",
+      "error": "An error occurred, please try again."
+    }
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Be the best duelist with your organized collection.",
+    "confirm": "Sign up",
+    "login": "Already have an account?",
+    "loginNow": "Login now",
+    "addPhoto": "Your Photo",
+    "validation": {
+      "required": "Please fill all fields",
+      "registrationFailed": "Registration Failed",
+      "error": "An error occurred, please try again."
+    }
+  },
+  "fields": {
+    "passwordMismatch": "Passwords do not match",
+    "name": "Name",
+    "lastname": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
   }
 }
