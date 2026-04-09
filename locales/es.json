@@ -140,5 +140,33 @@
     "email": "Email",
     "password": "Contraseña",
     "confirmPassword": "Confirmar Contraseña"
+  },
+  "permissions": {
+    "title": "Permisos",
+    "subtitle": "Yugioh Card Scanner necesita acceso a algunos permisos para funcionar correctamente.",
+    "camera": {
+      "title": "Cámara",
+      "description": "Yugioh Card Scanner necesita acceso a tu cámara para escanear tus cartas."
+    },
+    "microphone": {
+      "title": "Micrófono",
+      "description": "Yugioh Card Scanner necesita acceso a tu micrófono para mejorar la detección de cartas en entornos ruidosos."
+    },
+    "storage": {
+      "title": "Almacenamiento",
+      "description": "Yugioh Card Scanner necesita acceso al almacenamiento para guardar las imágenes de tus cartas y sincronizarlas con tu colección."
+    },
+    "mediaLocation": {
+      "title": "Ubicación de medios",
+      "description": "Yugioh Card Scanner necesita acceso a la ubicación de tus medios para organizar las imágenes de tus cartas y sincronizarlas con tu colección."
+    },
+    "foregroundService": {
+      "title": "Servicio en primer plano",
+      "description": "Yugioh Card Scanner utiliza un servicio en primer plano para mantener la cámara activa mientras escaneas tus cartas, incluso si cambias a otra aplicación momentáneamente."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Yugioh Card Scanner necesita permiso para enviar notificaciones sobre el estado de sincronización de tus cartas y otras actualizaciones importantes."
+    }
   }
 }

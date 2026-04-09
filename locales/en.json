@@ -139,5 +139,32 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password"
+  },
+  "permissions": {
+    "subtitle": "Yugioh Card Scanner needs access to a few permissions in order to work properly.",
+    "camera": {
+      "title": "Camera",
+      "description": "Yugioh Card Scanner needs access to your camera to scan your cards."
+    },
+    "microphone": {
+      "title": "Microphone",
+      "description": "Yugioh Card Scanner needs access to your microphone to improve card detection in noisy environments."
+    },
+    "storage": {
+      "title": "Storage",
+      "description": "Yugioh Card Scanner needs access to storage to save images of your cards and sync them with your collection."
+    },
+    "mediaLocation": {
+      "title": "Media Location",
+      "description": "Yugioh Card Scanner needs access to your media location to organize images of your cards and sync them with your collection."
+    },
+    "foregroundService": {
+      "title": "Foreground Service",
+      "description": "Yugioh Card Scanner uses a foreground service to keep the camera active while you scan your cards, even if you switch to another app temporarily."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Yugioh Card Scanner needs permission to send notifications about the status of your card synchronization and other important updates."
+    }
   }
 }

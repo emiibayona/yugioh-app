@@ -10,14 +10,14 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A1A1B"
     },
-    "packagerOpts": {
-      "assetExts": [
-        "db",
-        "sqlite"
-      ]
-    },
+    // "packagerOpts": {
+    //   "assetExts": [
+    //     "db",
+    //     "sqlite"
+    //   ]
+    // },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -27,11 +27,11 @@
       "bundleIdentifier": "dev.colomardo.yugioh-card-scanner"
     },
     "android": {
-      "usesCleartextTraffic": true,
-      "enableJetifier": false,
+      // "usesCleartextTraffic": true,
+      // "enableJetifier": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1A1A1B" // 🚀 Dark background matches the logo
       },
       "permissions": [
         "android.permission.CAMERA",

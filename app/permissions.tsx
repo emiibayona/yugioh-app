@@ -14,11 +14,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Camera, CameraPermissionStatus } from "react-native-vision-camera";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const ICON_SIZE = 26;
 
 export default function PermissionsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [cameraPermissionStatus, setCameraPermissionStatus] =
     React.useState<CameraPermissionStatus>("not-determined");
   const [microphonePermissionStatus, setMicrophonePermissionStatus] =
@@ -58,7 +60,7 @@ export default function PermissionsScreen() {
         <View style={styles.spacer} />
 
         <ThemedText type="subtitle" style={styles.subtitle}>
-          Obscura needs access to a few permissions in order to work properly.
+          {t("permissions.subtitle")}
         </ThemedText>
 
         <View style={styles.spacer} />
