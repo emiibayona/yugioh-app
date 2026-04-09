@@ -1,0 +1,107 @@
+{
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "logout": "Logout",
+    "cards": "Cards",
+    "binders": "Binders",
+    "welcomeBack": "Welcome Back",
+    "signInSubtitle": "Sign in to sync your collection",
+    "login": "Login",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile",
+    "success": "Success",
+    "error": "Error",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "common": {
+    "loading": "Loading",
+    "initializing": "Initializing",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "confirm": "Confirm",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save"
+  },
+  "tabs": {
+    "scanner": "Scanner",
+    "collection": "Collection",
+    "profile": "Profile"
+  },
+  "card": {
+    "nCards": "{{number}} Cards",
+    "treatment": {
+      "foil": "Foil"
+    },
+    "sync": {
+      "syncing": "Syncing..."
+    }
+  },
+  "scanner": {
+    "manualSearchPlaceholder": "Search card manually...",
+    "loadingCamera": "Connecting to camera...",
+    "session": {
+      "clearSession": "Clear Session",
+      "addToBinder": "Add to binder",
+      "clearSessionConfirm": "Are you sure you want to clear all cards?",
+      "added": "Card added",
+      "emptySession": "Empty Session",
+      "scanCards": "Scan some cards first!",
+      "scanned": "scanned",
+      "cardSynced": "Card added to {{binderName}}",
+      "cardsSynced": "{{count}} cards added to {{binderName}}",
+      "list": {
+        "title": "Lista",
+        "searching": "Searching...",
+        "empty": "No cards scanned yet",
+        "notFound": "No cards found"
+      }
+    },
+    "modes": {
+      "lightning": "Lightning",
+      "stopAndGo": "Stop & Go",
+      "pause": "Pause",
+      "resume": "Resume",
+      "working": "Working..."
+    }
+  },
+  "binder": {
+    "title": "Binders",
+    "subtitle": "Manage your collection of binders",
+    "binder": "Binders",
+    "new": "New binder",
+    "newMessage": "Enter a name for your new binder:",
+    "edit": "Edit binder",
+    "namePlaceholder": "Binder Name",
+    "select": "Select Binder",
+    "selectShort": "Select",
+    "newAndSync": "Add to a new binder",
+    "notFound": "No binders found",
+    "firstBinder": "You don't have any binders yet! Create a new one to start organizing your collection.",
+    "delete": "Delete Binder",
+    "deleteInfo": "This will delete the cards there too.\n\nThis actions cannot be undone.\n\n⚠️ Info: you can merge binders before delete this binder.",
+    "deleteConfirm": "Are you sure?",
+    "updatedDate": "Updated: {{date}}",
+    "editing": {
+      "placeholder": {
+        "name": "Binder Name",
+        "description": "Binder Description (Optional)"
+      },
+      "merge": {
+        "alert": "Merging binders",
+        "title": "Select binders to merge",
+        "message": "You are merging {{source}} into {{target}}. This will move all cards from {{source}} to {{target}} and then delete {{source}}.\n\n⚠️ Info: This action cannot be undone.",
+        "execute": "Merge",
+        "source": "Source",
+        "target": "Target"
+      }
+    }
+  }
+}

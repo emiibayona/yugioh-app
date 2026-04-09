@@ -14,7 +14,11 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { Camera, useCameraDevice, useCameraFormat } from "react-native-vision-camera";
+import {
+  Camera,
+  useCameraDevice,
+  useCameraFormat,
+} from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import Slider from "@react-native-community/slider";
 import TextRecognition, {
@@ -27,6 +31,7 @@ import useScannerSession from "@/hooks/useScannerSession";
 import { Ionicons } from "@expo/vector-icons";
 import useCardImage from "@/hooks/useCardImage";
 import useBinders from "@/hooks/useBinders";
+import { useTranslation } from "react-i18next";
 
 interface ScannerComponentProps {
   onCardDetected: (card: any) => void;
@@ -42,8 +47,10 @@ export default function ScannerComponent({
   const isFocused = useIsFocused();
   const format = useCameraFormat(device, [
     { videoResolution: { width: 1920, height: 1080 } },
-    { fps: 30 }
+    { fps: 30 },
   ]);
+
+  const { t } = useTranslation();
 
   const camera = useRef<Camera>(null);
   const db = useSQLiteContext();
@@ -167,13 +174,24 @@ export default function ScannerComponent({
 
   useEffect(() => {
     let interval: any;
-    if (scanMode !== "pause" && !showSessionModal && !showBinderSelector && isFocused) {
+    if (
+      scanMode !== "pause" &&
+      !showSessionModal &&
+      !showBinderSelector &&
+      isFocused
+    ) {
       interval = setInterval(analyzeFrame, 1500); // Increased interval for better performance
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [scanMode, lastDetectedName, showSessionModal, showBinderSelector, isFocused]);
+  }, [
+    scanMode,
+    lastDetectedName,
+    showSessionModal,
+    showBinderSelector,
+    isFocused,
+  ]);
 
   const handleModeChange = (newMode: ScanMode) => {
     if (newMode === "pause") {
@@ -191,10 +209,18 @@ export default function ScannerComponent({
   };
 
   const handleClearSession = () => {
-    Alert.alert("Clear Session", "Are you sure you want to clear all cards?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Clear", onPress: clearSession, style: "destructive" },
-    ]);
+    Alert.alert(
+      t("scanner.session.clearSession"),
+      t("scanner.session.clearSessionConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.clear"),
+          onPress: clearSession,
+          style: "destructive",
+        },
+      ],
+    );
   };
 
   const handleManualSearch = async (text: string) => {
@@ -220,12 +246,15 @@ export default function ScannerComponent({
     setSearchText("");
     setSearchResults([]);
     setShowSearchInput(false);
-    Alert.alert("Card added", `${card.name} added to session.`);
+    Alert.alert(t("scanner.session.added"), `${card.name}`);
   };
 
   const handleOpenBinderSelector = async () => {
     if (sessionCards.length === 0) {
-      Alert.alert("Empty Session", "Scan some cards first!");
+      Alert.alert(
+        t("scanner.session.emptySession"),
+        t("scanner.session.scanCards"),
+      );
       return;
     }
 
@@ -248,16 +277,24 @@ export default function ScannerComponent({
       const success = await addCardsToBinder(binderId, sessionCards);
       if (success) {
         Alert.alert(
-          "Success",
-          `${isFuse ? "Fused" : "Added"} ${sessionCards.length} cards to ${binderName}`,
+          t("common.success"),
+          sessionCards.length <= 1
+            ? t("scanner.session.cardSynced", { binderName })
+            : t("scanner.session.cardsSynced", {
+                count: sessionCards.length,
+                binderName,
+              }),
         );
         await clearSession();
         setShowBinderSelector(false);
       } else {
-        Alert.alert("Error", "Failed to sync cards to binder");
+        Alert.alert(t("common.error"), "Failed to sync cards to binder");
       }
     } catch (e) {
-      Alert.alert("Error", "An unexpected error occurred during sync");
+      Alert.alert(
+        t("common.error"),
+        "An unexpected error occurred during sync",
+      );
     } finally {
       setIsSyncing(false);
     }
@@ -265,12 +302,12 @@ export default function ScannerComponent({
 
   const handleCreateAndSync = () => {
     Alert.prompt(
-      "New Binder",
-      "Enter a name for your new binder:",
+      t("binder.new"),
+      t("binder.newMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Create & Add",
+          text: t("common.save"),
           onPress: async (name) => {
             if (!name) return;
             setIsSyncing(true);
@@ -302,7 +339,9 @@ export default function ScannerComponent({
     return (
       <View style={styles.error}>
         <ActivityIndicator size="large" color="#00FFCC" />
-        <Text style={{ color: "#FFF", marginTop: 10 }}>Connecting to camera...</Text>
+        <Text style={{ color: "#FFF", marginTop: 10 }}>
+          {t("scanner.loadingCamera")}
+        </Text>
       </View>
     );
 
@@ -360,7 +399,7 @@ export default function ScannerComponent({
                 scanMode === "lightning" && styles.activeModeBtnText,
               ]}
             >
-              LIGHTNING
+              {t("scanner.modes.lightning")}
             </Text>
           </TouchableOpacity>
 
@@ -377,7 +416,7 @@ export default function ScannerComponent({
                 scanMode === "stopAndGo" && styles.activeModeBtnText,
               ]}
             >
-              STOP & GO
+              {t("scanner.modes.stopAndGo")}
             </Text>
           </TouchableOpacity>
 
@@ -400,7 +439,7 @@ export default function ScannerComponent({
                 scanMode === "pause" && styles.activeModeBtnText,
               ]}
             >
-              PAUSE
+              {t("scanner.modes.pause")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -423,7 +462,9 @@ export default function ScannerComponent({
               <Text style={styles.previewTitle} numberOfLines={1}>
                 {recentDetection.name}
               </Text>
-              <Text style={styles.previewSubtitle}>Added to session</Text>
+              <Text style={styles.previewSubtitle}>
+                {t("scanner.session.added")}
+              </Text>
             </View>
           </View>
         )}
@@ -434,7 +475,9 @@ export default function ScannerComponent({
               style={styles.resumeButton}
               onPress={() => handleModeChange("pause")}
             >
-              <Text style={styles.resumeButtonText}>REANUDAR ESCANEO</Text>
+              <Text style={styles.resumeButtonText}>
+                {t("scanner.modes.resume")}
+              </Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.statusBadge}>
@@ -444,9 +487,7 @@ export default function ScannerComponent({
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.statusBadgeText}>
-                {scanMode === "lightning"
-                  ? "⚡ MODALIDAD RÁPIDA"
-                  : "🔍 BUSCANDO CARTAS..."}
+                {"🔍 " + t("scanner.modes.working")}
               </Text>
             </View>
           )}
@@ -463,7 +504,9 @@ export default function ScannerComponent({
               color="#00FFCC"
               style={{ marginRight: 8 }}
             />
-            <Text style={styles.counterText}>{totalScanned} Cards</Text>
+            <Text style={styles.counterText}>
+              {totalScanned} {t("scanner.session.scanned")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -472,13 +515,20 @@ export default function ScannerComponent({
         visible={showSessionModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowSessionModal(false)}
+        onRequestClose={() => {
+          setShowSessionModal(false);
+          setShowSearchInput(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.headerLeft}>
-                <Text style={styles.modalTitle}>Scanned Cards</Text>
+                <Text style={styles.modalTitle}>
+                  {showSearchInput
+                    ? t("scanner.session.list.searching")
+                    : t("scanner.session.list.title")}
+                </Text>
               </View>
               <View style={styles.headerRight}>
                 <TouchableOpacity
@@ -492,7 +542,10 @@ export default function ScannerComponent({
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => setShowSessionModal(false)}
+                  onPress={() => {
+                    setShowSessionModal(false);
+                    setShowSearchInput(false);
+                  }}
                   style={styles.headerIconBtn}
                 >
                   <Ionicons name="close" size={24} color="#FFF" />
@@ -511,7 +564,7 @@ export default function ScannerComponent({
                   />
                   <TextInput
                     style={styles.searchInput}
-                    placeholder="Search card manually..."
+                    placeholder={t("scanner.manualSearchPlaceholder")}
                     placeholderTextColor="#999"
                     value={searchText}
                     onChangeText={handleManualSearch}
@@ -552,7 +605,9 @@ export default function ScannerComponent({
                 {searchText.length >= 3 &&
                   searchResults.length === 0 &&
                   !isSearching && (
-                    <Text style={styles.noResultsText}>No cards found</Text>
+                    <Text style={styles.noResultsText}>
+                      {t("scanner.session.list.notFound")}
+                    </Text>
                   )}
               </View>
             )}
@@ -621,7 +676,7 @@ export default function ScannerComponent({
                               item.isFoil && styles.foilBtnTextActive,
                             ]}
                           >
-                            FOIL
+                            {t("card.treatment.foil")}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -640,7 +695,9 @@ export default function ScannerComponent({
                 )}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No cards scanned yet</Text>
+                    <Text style={styles.emptyText}>
+                      {t("scanner.session.list.empty")}
+                    </Text>
                   </View>
                 }
               />
@@ -649,19 +706,24 @@ export default function ScannerComponent({
             <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={[styles.footerBtn, styles.clearBtn]}
+                disabled={isSyncing || sessionCards.length === 0}
                 onPress={handleClearSession}
               >
-                <Text style={styles.footerBtnText}>Clear Session</Text>
+                <Text style={styles.footerBtnText}>
+                  {t("scanner.session.clearSession")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.footerBtn, styles.binderBtn]}
                 onPress={handleOpenBinderSelector}
-                disabled={isSyncing}
+                disabled={isSyncing || sessionCards.length === 0}
               >
                 {isSyncing ? (
                   <ActivityIndicator size="small" color="#000" />
                 ) : (
-                  <Text style={styles.binderBtnText}>Add to Binders</Text>
+                  <Text style={styles.binderBtnText}>
+                    {t("scanner.session.addToBinder")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -682,7 +744,7 @@ export default function ScannerComponent({
             {isSyncing && (
               <View style={styles.syncingOverlay}>
                 <ActivityIndicator size="large" color="#00FFCC" />
-                <Text style={styles.syncingText}>Syncing cards...</Text>
+                <Text style={styles.syncingText}>{t("card.sync.syncing")}</Text>
               </View>
             )}
 
@@ -690,7 +752,7 @@ export default function ScannerComponent({
               <TouchableOpacity onPress={handleCloseBinderSelector}>
                 <Ionicons name="arrow-back" size={24} color="#00FFCC" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Select Binder</Text>
+              <Text style={styles.modalTitle}>{t("binder.select")}</Text>
               <TouchableOpacity onPress={() => setShowBinderSelector(false)}>
                 <Ionicons name="close" size={24} color="#FFF" />
               </TouchableOpacity>
@@ -701,9 +763,7 @@ export default function ScannerComponent({
               onPress={handleCreateAndSync}
             >
               <Ionicons name="add-circle-outline" size={24} color="#00FFCC" />
-              <Text style={styles.newBinderText}>
-                Create New Binder with current selection
-              </Text>
+              <Text style={styles.newBinderText}>{t("binder.newAndSync")}</Text>
             </TouchableOpacity>
 
             {bindersLoading ? (
@@ -719,7 +779,12 @@ export default function ScannerComponent({
                     <View style={{ flex: 1 }}>
                       <Text style={styles.binderSelectName}>{item.name}</Text>
                       <Text style={styles.binderSelectCount}>
-                        {item.cardCount} cards
+                        {t("card.nCards", {
+                          number: item.Cards.reduce(
+                            (sum, c) => sum + c.quantity,
+                            0,
+                          ),
+                        })}
                       </Text>
                     </View>
                     <View style={styles.binderActionRow}>
@@ -729,16 +794,16 @@ export default function ScannerComponent({
                           handleSyncToBinder(item.id, item.name, false)
                         }
                       >
-                        <Text style={styles.binderActionText}>ADD</Text>
+                        <Text style={styles.binderActionText}>
+                          {t("binder.selectShort")}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
                 )}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>
-                      No existing binders found.
-                    </Text>
+                    <Text style={styles.emptyText}>{t("binder.notFound")}</Text>
                   </View>
                 }
               />

@@ -3,9 +3,11 @@ import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
   const { token, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -49,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Escaner",
+          title: t("tabs.scanner"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "scan" : "scan-outline"}
@@ -63,7 +65,7 @@ export default function TabLayout() {
         name="collection"
         options={{
           headerShown: false,
-          title: "Colección",
+          title: t("tabs.collection"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "library" : "library-outline"}
@@ -76,7 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Perfil",
+          title: t("tabs.profile"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

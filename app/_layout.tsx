@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
@@ -21,6 +21,11 @@ import * as SQLite from "expo-sqlite";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthProvider } from "@/context/AuthContext";
 import { BindersProvider } from "@/context/BinderContext";
+import { Camera } from "react-native-vision-camera";
+import * as ExpoMediaLibrary from "expo-media-library";
+
+import "@/locales/i18n";
+import { useTranslation } from "react-i18next";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -30,18 +35,45 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-
+  const segments = useSegments();
+  const router = useRouter();
   const apiUrl =
     process?.env?.EXPO_PUBLIC_API_URL || "http://192.168.1.62:8082/api";
   const versionKey = "db_version_tag";
   console.log("🚀 RootLayout started. API URL:", apiUrl);
+
+  const [isDbLoaded, setIsDbLoaded] = useState(false);
+  const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  const [isDbLoaded, setIsDbLoaded] = useState(false);
+  // 1. Check permissions first
+  useEffect(() => {
+    async function checkPermissions() {
+      const cameraStatus = Camera.getCameraPermissionStatus();
+      const microStatus = Camera.getMicrophonePermissionStatus();
+      const mediaStatus = await ExpoMediaLibrary.getPermissionsAsync();
+
+      const allGranted =
+        cameraStatus === "granted" &&
+        microStatus === "granted" &&
+        mediaStatus.granted;
+
+      console.log("Permissions status:", {
+        cameraStatus,
+        microStatus,
+        mediaGranted: mediaStatus.granted,
+      });
+      setHasPermissions(allGranted);
+    }
+
+    // Check every time we might have come back from permissions screen
+    checkPermissions();
+  }, [segments]);
 
   const dbName = "yugioh_database.sqlite";
   const dbFolder = `${FileSystem.documentDirectory}SQLite/`;
@@ -90,18 +122,11 @@ export default function RootLayout() {
         console.log("✅ DATABASE SYNCED FROM VERCEL BLOB");
       }
 
-      // 2. CRITICAL: Close existing connections if they exist
-      // If you use expo-sqlite (new API), ensure you aren't holding a lock.
-      // Some developers use a 'db.closeSync()' if available.
-
       // 3. Move the temp file to the live path (Overwrites safely)
       await FileSystem.moveAsync({
         from: tempPath,
         to: dbPath,
       });
-
-      // 4. Set permissions to Read-Write
-      // await FileSystem.setPermissionsAsync(dbPath, { read: true, write: true });
 
       console.log("✅ PROTOCOL COMPLETE: Database updated.");
       return true;
@@ -117,35 +142,31 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function initializeGeartownDb() {
-      console.log("Initializing database...");
-      if (isDbLoaded) return;
+      if (isDbLoaded || hasPermissions !== true) return;
+
+      console.log("Initializing database (Permissions granted)...");
 
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
 
-      // 🚨 THE GUARD: Only download if it's missing, empty, or 7 days old
+      // 🚨 THE GUARD: Only download if it's missing, empty, or needs version update
       const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
       try {
         console.log("Checking database version from server...", apiUrl);
         const vRes = await fetch(`${apiUrl}/version`);
         const vData = await vRes.json();
-        console.log("🚀 ~ initializeGeartownDb ~ vData:", vData);
         const needUpdateVersion = await checkVersion(vData.version);
 
         if (isFileBroken || needUpdateVersion) {
-          console.log("📥 Syncing database (Missing/Broken)...");
-
-          // Perform your download from Vercel Blob here
+          console.log("📥 Syncing database (Missing/Broken/Update)...");
           const success = await downloadDatabase();
-
           if (success) {
-            // Record the success so we don't do it again tomorrow
-            console.log("✅ Database persisted. Next check in 7 days.");
+            console.log("✅ Database persisted.");
           }
         } else {
           console.log(
             "📦 Using local database (Size:",
             fileInfo.size,
-            "bytes). No download needed.",
+            "bytes).",
           );
         }
       } catch (e) {
@@ -155,17 +176,28 @@ export default function RootLayout() {
     }
 
     initializeGeartownDb();
-  }, [isDbLoaded]);
+  }, [isDbLoaded, hasPermissions]);
 
-  console.log(
-    "🚀 RootLayout rendered. Loaded:",
-    loaded,
-    "DB Loaded:",
-    isDbLoaded,
-  );
-  if (!loaded || !isDbLoaded) {
+  if (!loaded || hasPermissions === null) {
     return <LoadingScreen />;
   }
+
+  // If permissions are not granted, we show the stack which will handle redirection to permissions
+  // but we DON'T show the SQLiteProvider yet.
+  const stackContent = (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="permissions"
+        options={{ presentation: "modal", headerShown: true }}
+      />
+      <Stack.Screen
+        name="media"
+        options={{ presentation: "modal", headerShown: false }}
+      />
+      <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
+    </Stack>
+  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -174,23 +206,13 @@ export default function RootLayout() {
         <BindersProvider>
           <ThemeProvider value={DarkTheme}>
             <Suspense fallback={<LoadingScreen />}>
-              <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
-                <Stack>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="permissions"
-                    options={{ presentation: "modal", headerShown: true }}
-                  />
-                  <Stack.Screen
-                    name="media"
-                    options={{ presentation: "modal", headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="+not-found"
-                    options={{ presentation: "modal" }}
-                  />
-                </Stack>
-              </SQLite.SQLiteProvider>
+              {isDbLoaded ? (
+                <SQLite.SQLiteProvider databaseName={dbName} useSuspense>
+                  {stackContent}
+                </SQLite.SQLiteProvider>
+              ) : (
+                stackContent
+              )}
             </Suspense>
           </ThemeProvider>
         </BindersProvider>
@@ -200,6 +222,7 @@ export default function RootLayout() {
 }
 
 function LoadingScreen() {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -210,7 +233,9 @@ function LoadingScreen() {
       }}
     >
       <ActivityIndicator size="large" color="#00FFCC" />
-      <Text style={{ marginTop: 20, color: "white" }}>Loading...</Text>
+      <Text style={{ marginTop: 20, color: "white" }}>
+        {t("common.initializing")}
+      </Text>
     </View>
   );
 }

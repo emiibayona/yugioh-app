@@ -1,0 +1,107 @@
+{
+  "profile": {
+    "title": "Perfil",
+    "editProfile": "Editar Perfil",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "logout": "Cerrar Sesión",
+    "cards": "Cartas",
+    "binders": "Carpetas",
+    "welcomeBack": "Bienvenido de nuevo",
+    "signInSubtitle": "Inicia sesión para sincronizar tu colección",
+    "login": "Iniciar Sesión",
+    "updateSuccess": "Perfil actualizado con éxito",
+    "updateError": "Error al actualizar el perfil",
+    "success": "Éxito",
+    "error": "Error",
+    "language": "Idioma",
+    "english": "Inglés",
+    "spanish": "Español"
+  },
+  "common": {
+    "loading": "Cargando",
+    "initializing": "Inicializando",
+    "cancel": "Cancelar",
+    "clear": "Limpiar",
+    "confirm": "Confirmar",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar"
+  },
+  "tabs": {
+    "scanner": "Escáner",
+    "collection": "Colección",
+    "profile": "Perfil"
+  },
+  "card": {
+    "nCards": "{{number}} cartas",
+    "treatment": {
+      "foil": "Foil"
+    },
+    "sync": {
+      "syncing": "Sincronizando..."
+    }
+  },
+  "scanner": {
+    "manualSearchPlaceholder": "Buscar carta manualmente...",
+    "loadingCamera": "Conectando a la cámara...",
+    "session": {
+      "clearSession": "Limpiar Sesión",
+      "addToBinder": "Agregar a carpeta",
+      "clearSessionConfirm": "¿Estás seguro de que quieres limpiar todas las cartas?",
+      "added": "Carta añadida",
+      "emptySession": "Sesión vacía",
+      "scanCards": "¡Escanea algunas cartas primero!",
+      "scanned": "escaneadas",
+      "cardSynced": "Carta añadida en {{binderName}}",
+      "cardsSynced": "{{count}} cartas añadidas en {{binderName}}",
+      "list": {
+        "title": "Lista",
+        "searching": "Buscando...",
+        "empty": "No se han escaneado cartas aún",
+        "notFound": "No se encontraron cartas"
+      }
+    },
+    "modes": {
+      "lightning": "Rápido",
+      "stopAndGo": "Stop & Go",
+      "pause": "Pausa",
+      "resume": "Reanudar",
+      "working": "Trabajando..."
+    }
+  },
+  "binder": {
+    "title": "Colección",
+    "subtitle": "Organiza tus cartas en carpetas personalizadas",
+    "binder": "Carpetas",
+    "new": "Nueva carpeta",
+    "newMessage": "Ingresa un nombre para tu nueva carpeta:",
+    "edit": "Editar carpeta",
+    "namePlaceholder": "Nombre de la carpeta",
+    "select": "Seleccionar carpeta",
+    "selectShort": "Seleccionar",
+    "newAndSync": "Agregar a una nueva carpeta",
+    "notFound": "No se encontraron carpetas",
+    "firstBinder": "¡Parece que no tienes carpetas aún! Crea una nueva para empezar a organizar tu colección.",
+    "delete": "Eliminar carpeta",
+    "deleteInfo": "Se eliminarán las cartas dentro de ella.\n\nEsta acción no se puede deshacer.\n\n⚠️ Info: puedes fusionar carpetas antes si deseas.",
+    "deleteConfirm": "¿Estás seguro?",
+    "updatedDate": "Actualizado: {{date}}",
+    "editing": {
+      "placeholder": {
+        "name": "Nombre de la carpeta",
+        "description": "Descripción de la carpeta (Opcional)"
+      },
+      "merge": {
+        "alert":"Fusionando carpetas",
+        "title": "Seleccionar carpeta para fusionar",
+        "message": "Esto moverá todas las cartas de {{source}} a la carpeta seleccionada y luego eliminará {{target}}.\n\n⚠️ Info: asegúrate de seleccionar la carpeta correcta para fusionar, ya que no podrás revertir esta acción.\n\n¿Quieres continuar?",
+        "execute": "Fusionar",
+        "source": "Desde",
+        "target": "Hacia"
+      }
+    }
+  }
+}

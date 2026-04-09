@@ -16,8 +16,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useBinders } from "@/hooks/useBinders";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileScreen() {
+  const { t, i18n } = useTranslation();
   const { user, logout, updateProfile, isLoading } = useAuth();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -25,6 +27,12 @@ export default function ProfileScreen() {
   const [lastname, setLastname] = useState(user?.lastname || "");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const currentLanguage = i18n.language;
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   const { userNumbers } = useBinders();
   const handleLogout = async () => {
@@ -53,9 +61,12 @@ export default function ProfileScreen() {
       await updateProfile({ name, lastname, imageUri });
       setIsEditing(false);
       setImageUri(null);
-      Alert.alert("Success", "Profile updated successfully");
+      Alert.alert(t("profile.success"), t("profile.updateSuccess"));
     } catch (e: any) {
-      Alert.alert("Error", "Failed to update profile > " + e?.message);
+      Alert.alert(
+        t("profile.error"),
+        t("profile.updateError") + " > " + e?.message,
+      );
     } finally {
       setSaving(false);
     }
@@ -74,15 +85,15 @@ export default function ProfileScreen() {
       <View style={styles.container}>
         <View style={styles.loginContainer}>
           <Ionicons name="person-circle-outline" size={100} color="#00FFCC" />
-          <Text style={styles.loginTitle}>Welcome Back</Text>
+          <Text style={styles.loginTitle}>{t("profile.welcomeBack")}</Text>
           <Text style={styles.loginSubtitle}>
-            Sign in to sync your collection
+            {t("profile.signInSubtitle")}
           </Text>
           <TouchableOpacity
             style={styles.loginBtn}
             onPress={() => router.push("/login")}
           >
-            <Text style={styles.loginBtnText}>Login</Text>
+            <Text style={styles.loginBtnText}>{t("profile.login")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -117,14 +128,14 @@ export default function ProfileScreen() {
               style={styles.editInput}
               value={name}
               onChangeText={setName}
-              placeholder="First Name"
+              placeholder={t("profile.firstName")}
               placeholderTextColor="#666"
             />
             <TextInput
               style={styles.editInput}
               value={lastname}
               onChangeText={setLastname}
-              placeholder="Last Name"
+              placeholder={t("profile.lastName")}
               placeholderTextColor="#666"
             />
             <View style={styles.editActions}>
@@ -132,7 +143,7 @@ export default function ProfileScreen() {
                 style={styles.cancelBtn}
                 onPress={() => setIsEditing(false)}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t("profile.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveBtn}
@@ -142,7 +153,7 @@ export default function ProfileScreen() {
                 {saving ? (
                   <ActivityIndicator size="small" color="#000" />
                 ) : (
-                  <Text style={styles.saveBtnText}>Save</Text>
+                  <Text style={styles.saveBtnText}>{t("profile.save")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -157,7 +168,9 @@ export default function ProfileScreen() {
               style={styles.editProfileBtn}
               onPress={() => setIsEditing(true)}
             >
-              <Text style={styles.editProfileBtnText}>Edit Profile</Text>
+              <Text style={styles.editProfileBtnText}>
+                {t("profile.editProfile")}
+              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -167,45 +180,62 @@ export default function ProfileScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{userNumbers.cards}</Text>
-            <Text style={styles.statLabel}>Cards</Text>
+            <Text style={styles.statLabel}>{t("profile.cards")}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{userNumbers.binders}</Text>
-            <Text style={styles.statLabel}>Binders</Text>
+            <Text style={styles.statLabel}>{t("profile.binders")}</Text>
           </View>
-          {/* <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>3</Text>
-          <Text style={styles.statLabel}>Decks</Text>
-        </View> */}
         </View>
       )}
 
-      {/* <View style={styles.settingsSection}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingLabelGroup}>
-            <Ionicons name="cloud-upload-outline" size={20} color="#FFF" />
-            <Text style={styles.settingLabel}>Sync Database</Text>
+      {!isEditing && (
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>{t("profile.language")}</Text>
+          <View style={styles.languageSelector}>
+            <TouchableOpacity
+              style={[
+                styles.languageBtn,
+                currentLanguage.startsWith("en") && styles.activeLanguageBtn,
+              ]}
+              onPress={() => changeLanguage("en")}
+            >
+              <Text
+                style={[
+                  styles.languageBtnText,
+                  currentLanguage.startsWith("en") &&
+                    styles.activeLanguageBtnText,
+                ]}
+              >
+                🇺🇸 {t("profile.english")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.languageBtn,
+                currentLanguage.startsWith("es") && styles.activeLanguageBtn,
+              ]}
+              onPress={() => changeLanguage("es")}
+            >
+              <Text
+                style={[
+                  styles.languageBtnText,
+                  currentLanguage.startsWith("es") &&
+                    styles.activeLanguageBtnText,
+                ]}
+              >
+                🇪🇸 {t("profile.spanish")}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#666" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingLabelGroup}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#FFF" />
-            <Text style={styles.settingLabel}>Privacy Policy</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color="#666" />
-        </TouchableOpacity>
-      </View> */}
+        </View>
+      )}
 
       {!isEditing && (
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#FF5555" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t("profile.logout")}</Text>
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -374,9 +404,6 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#333",
   },
-  settingsSection: {
-    paddingHorizontal: 20,
-  },
   sectionTitle: {
     color: "#666",
     fontSize: 12,
@@ -403,11 +430,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 12,
   },
+  settingsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  languageSelector: {
+    flexDirection: "row",
+    backgroundColor: "#111",
+    borderRadius: 12,
+    padding: 5,
+    borderWidth: 1,
+    borderColor: "#222",
+  },
+  languageBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  activeLanguageBtn: {
+    backgroundColor: "#00FFCC",
+  },
+  languageBtnText: {
+    color: "#AAA",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  activeLanguageBtnText: {
+    color: "#000",
+  },
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 200,
+    marginTop: "200%",
     marginBottom: 40,
     paddingVertical: 15,
   },

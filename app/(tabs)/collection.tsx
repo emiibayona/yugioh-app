@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import useBinders, { Binder } from "@/hooks/useBinders";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function CollectionScreen() {
   const {
@@ -27,6 +28,7 @@ export default function CollectionScreen() {
   } = useBinders();
   const router = useRouter();
   const [refreshing, setRefreshRefreshing] = useState(false);
+  const { t } = useTranslation();
 
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
@@ -67,7 +69,7 @@ export default function CollectionScreen() {
       resetForm();
       loadData();
     } else {
-      Alert.alert("Error", "Failed to save binder");
+      Alert.alert(t("common.error"), "Failed to save binder");
     }
   };
 
@@ -85,16 +87,20 @@ export default function CollectionScreen() {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert("Delete Binder", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          if (await deleteBinder(id)) loadData();
+    Alert.alert(
+      t("binder.delete"),
+      `${t("binder.deleteInfo")}\n\n${t("binder.deleteConfirm")}`,
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.confirm"),
+          style: "destructive",
+          onPress: async () => {
+            if (await deleteBinder(id)) loadData();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleSelectForFuse = (id: string) => {
@@ -109,25 +115,27 @@ export default function CollectionScreen() {
     if (selectedForFuse.length !== 2) return;
 
     Alert.alert(
-      "Fuse Binders",
-      "This will merge all cards into the second binder and delete the first one. Continue?",
+      t("binder.editing.merge.alert"),
+      t("binder.editing.merge.message", {
+        source: binders.find((x) => x.id === selectedForFuse[0])?.name || "",
+        target: binders.find((x) => x.id === selectedForFuse[1])?.name || "",
+      }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Fuse",
+          text: t("common.confirm"),
           onPress: async () => {
             const success = await fuseBinders(
               selectedForFuse[0],
               selectedForFuse[1],
               binders.find((x) => x.id === selectedForFuse[0])?.Cards || [],
             );
-            console.log("🚀 ~ executeFuse ~ success:", success)
             if (success) {
               setFuseMode(false);
               setSelectedForFuse([]);
               loadData();
             } else {
-              Alert.alert("Error", "Fuse failed");
+              Alert.alert(t("common.error"), "Fuse failed");
             }
           },
         },
@@ -162,9 +170,19 @@ export default function CollectionScreen() {
           </Text>
           <Text
             style={[styles.binderDetails, isSelected && styles.selectedText]}
+            ellipsizeMode="tail"
           >
-            {cardsAmount} cards • Updated{" "}
-            {new Date(item.updatedAt).toLocaleDateString()}
+            {t("card.nCards", {
+              number: cardsAmount,
+            })}
+          </Text>
+          <Text
+            style={[styles.binderDetails, isSelected && styles.selectedText]}
+            ellipsizeMode="tail"
+          >
+            {t("binder.updatedDate", {
+              date: new Date(item.updatedAt).toLocaleDateString(),
+            })}
           </Text>
         </View>
         {!fuseMode && (
@@ -177,7 +195,9 @@ export default function CollectionScreen() {
         )}
         {fuseMode && isSelected && (
           <Text style={styles.fuseOrder}>
-            {selectedForFuse.indexOf(item.id) === 0 ? "SOURCE" : "TARGET"}
+            {selectedForFuse.indexOf(item.id) === 0
+              ? t("binder.editing.merge.source")
+              : t("binder.editing.merge.target")}
           </Text>
         )}
       </TouchableOpacity>
@@ -188,8 +208,11 @@ export default function CollectionScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Colección</Text>
-          <Text style={styles.subtitle}>{binders.length} Binders</Text>
+          <Text style={styles.title}>{t("binder.title")}</Text>
+          <Text style={styles.subtitleB}>{t("binder.subtitle")}</Text>
+          <Text style={styles.subtitle}>
+            {binders.length} {t("binder.binder")}
+          </Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -219,7 +242,7 @@ export default function CollectionScreen() {
 
       {fuseMode && (
         <View style={styles.fuseBar}>
-          <Text style={styles.fuseText}>Select two binders to merge</Text>
+          <Text style={styles.fuseText}>{t("binder.editing.merge.title")}</Text>
           <TouchableOpacity
             style={[
               styles.executeFuseBtn,
@@ -228,7 +251,9 @@ export default function CollectionScreen() {
             disabled={selectedForFuse.length !== 2}
             onPress={executeFuse}
           >
-            <Text style={styles.executeFuseText}>Execute Fuse</Text>
+            <Text style={styles.executeFuseText}>
+              {t("binder.editing.merge.execute")}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -249,13 +274,13 @@ export default function CollectionScreen() {
           !loading ? (
             <View style={styles.center}>
               <Ionicons name="albums-outline" size={60} color="#333" />
-              <Text style={styles.emptyText}>No binders found</Text>
+              <Text style={styles.emptyText}>{t("binder.notFound")}</Text>
               <TouchableOpacity
                 style={styles.createFirstBtn}
                 onPress={() => setModalVisible(true)}
               >
                 <Text style={styles.createFirstText}>
-                  Create your first binder
+                  {t("binder.firstBinder")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -274,18 +299,18 @@ export default function CollectionScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {editingBinder ? "Edit Binder" : "New Binder"}
+              {editingBinder ? t("binder.edit") : t("binder.new")}
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="Binder Name"
+              placeholder={t("binder.editing.placeholder.name")}
               placeholderTextColor="#666"
               value={name}
               onChangeText={setName}
             />
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Description (Optional)"
+              placeholder={t("binder.editing.placeholder.description")}
               placeholderTextColor="#666"
               value={description}
               onChangeText={setDescription}
@@ -297,10 +322,10 @@ export default function CollectionScreen() {
                 style={styles.cancelBtn}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.cancelBtnText}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                <Text style={styles.saveBtnText}>Save Binder</Text>
+                <Text style={styles.saveBtnText}>{t("common.save")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -348,6 +373,14 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: "#666",
+    fontWeight: "bold",
+    marginTop: 8,
+  },
+  subtitleB: {
+    fontSize: 12,
+    maxWidth: "90%",
+    color: "#00FFCC",
+    fontWeight: "bold",
   },
   addBtn: {
     backgroundColor: "#00FFCC",
@@ -455,16 +488,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   createFirstBtn: {
-    marginTop: 20,
+    marginTop: 50,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#00FFCC",
+    backgroundColor: "rgba(0, 255, 204, 0.1)",
   },
   createFirstText: {
     color: "#00FFCC",
     fontWeight: "bold",
+    textAlign: "center",
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
