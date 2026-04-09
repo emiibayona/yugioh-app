@@ -163,22 +163,24 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{userNumbers.cards}</Text>
-          <Text style={styles.statLabel}>Cards</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{userNumbers.binders}</Text>
-          <Text style={styles.statLabel}>Binders</Text>
-        </View>
-        {/* <View style={styles.statDivider} />
+      {!isEditing && (
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{userNumbers.cards}</Text>
+            <Text style={styles.statLabel}>Cards</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{userNumbers.binders}</Text>
+            <Text style={styles.statLabel}>Binders</Text>
+          </View>
+          {/* <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>3</Text>
           <Text style={styles.statLabel}>Decks</Text>
         </View> */}
-      </View>
+        </View>
+      )}
 
       {/* <View style={styles.settingsSection}>
         <Text style={styles.sectionTitle}>Preferences</Text>
@@ -200,10 +202,12 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View> */}
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#FF5555" />
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
+      {!isEditing && (
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#FF5555" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -403,7 +407,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 300,
+    marginTop: 200,
     marginBottom: 40,
     paddingVertical: 15,
   },

@@ -1,14 +1,12 @@
 import * as React from "react";
 import {
   StyleSheet,
-  Platform,
   View,
-  SafeAreaView,
-  StatusBar,
 } from "react-native";
 import { Redirect } from "expo-router";
 import { useCameraPermission } from "react-native-vision-camera";
 import { useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import ScannerComponent from "@/components/Scanner/ScannerComponent";
 
 export default function EscanerScreen() {
@@ -24,14 +22,12 @@ export default function EscanerScreen() {
   if (redirectToPermissions) return <Redirect href={"/permissions"} />;
 
   return (
-    <>
-      <StatusBar barStyle={"light-content"} />
-      <SafeAreaView style={styles.container}>
-        <View style={styles.scannerWrapper}>
-          <ScannerComponent onCardDetected={handleCardDetected} />
-        </View>
-      </SafeAreaView>
-    </>
+    <View style={styles.container}>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <View style={styles.scannerWrapper}>
+        <ScannerComponent onCardDetected={handleCardDetected} />
+      </View>
+    </View>
   );
 }
 
@@ -39,10 +35,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   scannerWrapper: {
     flex: 1,
     zIndex: 1,
   },
 });
+

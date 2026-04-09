@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -12,8 +12,11 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  Platform,
 } from "react-native";
-import { Camera, useCameraDevice } from "react-native-vision-camera";
+import { Camera, useCameraDevice, useCameraFormat } from "react-native-vision-camera";
+import { useIsFocused } from "@react-navigation/native";
+import Slider from "@react-native-community/slider";
 import TextRecognition, {
   TextRecognitionScript,
 } from "@react-native-ml-kit/text-recognition";
@@ -36,6 +39,12 @@ export default function ScannerComponent({
 }: ScannerComponentProps) {
   const { width: screenWidth } = useWindowDimensions();
   const device = useCameraDevice("back");
+  const isFocused = useIsFocused();
+  const format = useCameraFormat(device, [
+    { videoResolution: { width: 1920, height: 1080 } },
+    { fps: 30 }
+  ]);
+
   const camera = useRef<Camera>(null);
   const db = useSQLiteContext();
   const { findCardByNames, searchCards } = useDatabase(db);
@@ -55,10 +64,12 @@ export default function ScannerComponent({
     loading: bindersLoading,
   } = useBinders();
 
-  const [zoom, setZoom] = useState(1.5);
+  const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(5);
   const [lastDetectedName, setLastDetectedName] = useState<string | null>(null);
   const [scanMode, setScanMode] = useState<ScanMode>("pause");
-  const [previousMode, setPreviousMode] = useState<ScanMode>("pause");
+  const [previousMode, setPreviousMode] = useState<ScanMode>("stopAndGo");
 
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [recentDetection, setRecentDetection] = useState<any>(null);
@@ -75,19 +86,31 @@ export default function ScannerComponent({
 
   const analysisLock = useRef(false);
 
+  useEffect(() => {
+    if (device) {
+      setMinZoom(device.minZoom);
+      // Make it between 1 and 2 as requested. Some devices might have minZoom > 1.
+      const targetMaxZoom = Math.max(device.minZoom, 2);
+      setMaxZoom(targetMaxZoom);
+      setZoom(Math.max(device.minZoom, 1.2));
+    }
+  }, [device]);
+
   const analyzeFrame = async () => {
     if (
       scanMode === "pause" ||
       analysisLock.current ||
       !camera.current ||
       showSessionModal ||
-      showBinderSelector
+      showBinderSelector ||
+      !isFocused
     )
       return;
 
     analysisLock.current = true;
     try {
-      const photo = await camera.current.takeSnapshot({ quality: 80 });
+      // Use lower quality for faster processing on Android
+      const photo = await camera.current.takeSnapshot({ quality: 60 });
       if (!photo) return;
 
       const imageUri = "file://" + photo.path;
@@ -129,7 +152,8 @@ export default function ScannerComponent({
             if (scanMode === "stopAndGo") {
               setScanMode("pause");
             } else {
-              await new Promise((resolve) => setTimeout(resolve, 2000));
+              // Wait longer in lightning mode between detections to avoid multiple registrations
+              await new Promise((resolve) => setTimeout(resolve, 2500));
             }
           }
         }
@@ -143,13 +167,13 @@ export default function ScannerComponent({
 
   useEffect(() => {
     let interval: any;
-    if (scanMode !== "pause" && !showSessionModal && !showBinderSelector) {
-      interval = setInterval(analyzeFrame, 1000);
+    if (scanMode !== "pause" && !showSessionModal && !showBinderSelector && isFocused) {
+      interval = setInterval(analyzeFrame, 1500); // Increased interval for better performance
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [scanMode, lastDetectedName, showSessionModal, showBinderSelector]);
+  }, [scanMode, lastDetectedName, showSessionModal, showBinderSelector, isFocused]);
 
   const handleModeChange = (newMode: ScanMode) => {
     if (newMode === "pause") {
@@ -277,7 +301,8 @@ export default function ScannerComponent({
   if (!device)
     return (
       <View style={styles.error}>
-        <Text>No device found</Text>
+        <ActivityIndicator size="large" color="#00FFCC" />
+        <Text style={{ color: "#FFF", marginTop: 10 }}>Connecting to camera...</Text>
       </View>
     );
 
@@ -288,18 +313,37 @@ export default function ScannerComponent({
 
   return (
     <View style={styles.container}>
-      <Camera
-        ref={camera}
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={true}
-        photo={true}
-        zoom={zoom}
-        video={true}
-        resizeMode="cover"
-      />
+      {isFocused && (
+        <Camera
+          ref={camera}
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={isFocused}
+          photo={true}
+          zoom={zoom}
+          format={format}
+          video={true}
+          resizeMode="cover"
+          enableZoomGesture={true}
+        />
+      )}
 
       <ScannerOverlay />
+
+      <View style={styles.zoomContainer}>
+        <Ionicons name="add" size={14} color="#00FFCC" />
+        <Slider
+          style={styles.zoomSlider}
+          minimumValue={minZoom}
+          maximumValue={maxZoom}
+          value={zoom}
+          onValueChange={setZoom}
+          minimumTrackTintColor="#00FFCC"
+          maximumTrackTintColor="rgba(255,255,255,0.2)"
+          thumbTintColor="#00FFCC"
+        />
+        <Ionicons name="remove" size={14} color="#AAA" />
+      </View>
 
       <View style={styles.topControls}>
         <View style={styles.modeSelector}>
@@ -715,44 +759,66 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  zoomContainer: {
+    position: "absolute",
+    right: 12,
+    top: "40%",
+    height: 150,
+    width: 28,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 14,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 30,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    overflow: "visible",
+  },
+  zoomSlider: {
+    width: 100,
+    height: 20,
+    transform: [{ rotate: "-90deg" }],
+  },
   previewContainer: {
     backgroundColor: "rgba(0,0,0,0.85)",
     flexDirection: "row",
-    padding: 10,
-    borderRadius: 12,
+    padding: 6,
+    borderRadius: 8,
     alignItems: "center",
-    width: "90%",
+    width: "75%",
     borderWidth: 1,
     borderColor: "#00FFCC",
-    marginBottom: 15,
+    marginBottom: 8,
   },
   previewImage: {
-    width: 35,
-    height: 50,
-    borderRadius: 4,
+    width: 20,
+    height: 30,
+    borderRadius: 2,
   },
   previewInfo: {
-    marginLeft: 12,
+    marginLeft: 8,
     flex: 1,
   },
   previewTitle: {
     color: "#00FFCC",
     fontWeight: "bold",
-    fontSize: 13,
+    fontSize: 10,
   },
   previewSubtitle: {
     color: "#AAA",
-    fontSize: 10,
+    fontSize: 8,
   },
   topControls: {
     position: "absolute",
-    top: 30,
+    top: Platform.OS === "android" ? 30 : 50,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -761,18 +827,18 @@ const styles = StyleSheet.create({
   modeSelector: {
     flexDirection: "row",
     backgroundColor: "rgba(0,0,0,0.8)",
-    padding: 5,
-    borderRadius: 35,
+    padding: 2,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(0, 255, 204, 0.4)",
-    width: "90%",
+    width: "80%",
     justifyContent: "space-between",
   },
   modeBtn: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 6,
     alignItems: "center",
-    borderRadius: 30,
+    borderRadius: 18,
     flexDirection: "row",
     justifyContent: "center",
   },
@@ -784,7 +850,7 @@ const styles = StyleSheet.create({
   },
   modeBtnText: {
     color: "#AAA",
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
@@ -793,7 +859,7 @@ const styles = StyleSheet.create({
   },
   bottomControls: {
     position: "absolute",
-    bottom: 10,
+    bottom: 2,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -802,14 +868,14 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
-    gap: 10,
+    marginBottom: 5,
+    gap: 8,
   },
   sessionCounter: {
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: "#00FFCC",
     flexDirection: "row",
@@ -817,20 +883,21 @@ const styles = StyleSheet.create({
   },
   counterText: {
     color: "#FFF",
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "bold",
   },
   actionArea: {
-    height: 50,
+    height: 35,
     justifyContent: "center",
     width: "100%",
     alignItems: "center",
+    marginBottom: 2,
   },
   resumeButton: {
     backgroundColor: "#00FFCC",
-    paddingHorizontal: 25,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 12,
     shadowColor: "#00FFCC",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -840,14 +907,14 @@ const styles = StyleSheet.create({
   resumeButtonText: {
     color: "#000",
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: 11,
     letterSpacing: 0.5,
   },
   statusBadge: {
     backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(0, 255, 204, 0.3)",
     flexDirection: "row",
@@ -855,7 +922,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     color: "#00FFCC",
-    fontSize: 11,
+    fontSize: 8,
     fontWeight: "bold",
     letterSpacing: 1,
   },

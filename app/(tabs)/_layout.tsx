@@ -37,11 +37,11 @@ export default function TabLayout() {
           backgroundColor: "#000",
           borderTopWidth: 1,
           borderTopColor: "#333",
-          paddingBottom: 5,
-          height: 60,
+          paddingBottom: 1,
+          height: 44,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 8,
           fontWeight: "bold",
         },
       }}
@@ -53,7 +53,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "scan" : "scan-outline"}
-              size={24}
+              size={20}
               color={color}
             />
           ),
@@ -67,7 +67,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "library" : "library-outline"}
-              size={24}
+              size={20}
               color={color}
             />
           ),
@@ -80,7 +80,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}
-              size={24}
+              size={20}
               color={color}
             />
           ),

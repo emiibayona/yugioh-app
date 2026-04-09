@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ActivityIndicator, Text, View } from "react-native";
 import { Suspense } from "react";
+import { StatusBar } from "expo-status-bar";
 
 import * as FileSystem from "expo-file-system";
 import { Asset } from "expo-asset";
@@ -168,6 +169,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="light" />
       <AuthProvider>
         <BindersProvider>
           <ThemeProvider value={DarkTheme}>
