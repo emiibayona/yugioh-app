@@ -17,9 +17,10 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useBinders } from "@/hooks/useBinders";
 import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function ProfileScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user, logout, updateProfile, isLoading } = useAuth();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -27,12 +28,6 @@ export default function ProfileScreen() {
   const [lastname, setLastname] = useState(user?.lastname || "");
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const currentLanguage = i18n.language;
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
 
   const { userNumbers } = useBinders();
   const handleLogout = async () => {
@@ -190,47 +185,7 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      {!isEditing && (
-        <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>{t("profile.language")}</Text>
-          <View style={styles.languageSelector}>
-            <TouchableOpacity
-              style={[
-                styles.languageBtn,
-                currentLanguage.startsWith("en") && styles.activeLanguageBtn,
-              ]}
-              onPress={() => changeLanguage("en")}
-            >
-              <Text
-                style={[
-                  styles.languageBtnText,
-                  currentLanguage.startsWith("en") &&
-                    styles.activeLanguageBtnText,
-                ]}
-              >
-                🇺🇸 {t("profile.english")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.languageBtn,
-                currentLanguage.startsWith("es") && styles.activeLanguageBtn,
-              ]}
-              onPress={() => changeLanguage("es")}
-            >
-              <Text
-                style={[
-                  styles.languageBtnText,
-                  currentLanguage.startsWith("es") &&
-                    styles.activeLanguageBtnText,
-                ]}
-              >
-                🇪🇸 {t("profile.spanish")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {!isEditing && <LanguageSelector />}
 
       {!isEditing && (
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -429,35 +384,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     marginLeft: 12,
-  },
-  settingsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  languageSelector: {
-    flexDirection: "row",
-    backgroundColor: "#111",
-    borderRadius: 12,
-    padding: 5,
-    borderWidth: 1,
-    borderColor: "#222",
-  },
-  languageBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 10,
-  },
-  activeLanguageBtn: {
-    backgroundColor: "#00FFCC",
-  },
-  languageBtnText: {
-    color: "#AAA",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  activeLanguageBtnText: {
-    color: "#000",
   },
   logoutBtn: {
     flexDirection: "row",

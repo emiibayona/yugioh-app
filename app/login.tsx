@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, Link, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -50,6 +51,7 @@ export default function LoginScreen() {
       style={styles.container}
     >
       <Stack.Screen options={{ headerShown: false }} />
+      <LanguageSelector floating />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Ionicons name="card" size={80} color="#00FFCC" />

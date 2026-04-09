@@ -17,6 +17,7 @@ import { useRouter, Link, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -69,6 +70,7 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <Stack.Screen options={{ headerShown: false }} />
+      <LanguageSelector floating />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
@@ -77,7 +79,9 @@ export default function RegisterScreen() {
             ) : (
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="camera" size={40} color="#00FFCC" />
-                <Text style={styles.imagePlaceholderText}>{t("register.addPhoto")}</Text>
+                <Text style={styles.imagePlaceholderText}>
+                  {t("register.addPhoto")}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
