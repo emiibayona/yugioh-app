@@ -87,13 +87,16 @@ export function BindersProvider({ children }: { children: React.ReactNode }) {
     if (token && user?.email) {
       fetchBinders();
     }
-    setUserNumbers({ binders: binders?.length, cards: 0 });
-    for (const binder of binders) {
-      const totalCards = binder.Cards.reduce((sum, c) => sum + c.quantity, 0);
-      setUserNumbers((prev) => ({ ...prev, cards: prev.cards + totalCards }));
-    }
   }, [token, user?.email, fetchBinders]);
 
+  useEffect(() => {
+    const data = { binders: binders?.length, cards: 0 };
+    for (const binder of binders) {
+      const totalCards = binder.Cards.reduce((sum, c) => sum + c.quantity, 0);
+      data.cards += totalCards;
+    }
+    setUserNumbers(data);
+  }, [binders]);
   const createBinder = async (name: string, description?: string) => {
     if (!token || !user?.email) return null;
     try {

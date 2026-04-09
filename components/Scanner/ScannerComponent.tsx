@@ -685,15 +685,7 @@ export default function ScannerComponent({
                           handleSyncToBinder(item.id, item.name, false)
                         }
                       >
-                        <Text style={styles.binderActionText}>MOVE</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.binderActionBtn, styles.fuseActionBtn]}
-                        onPress={() =>
-                          handleSyncToBinder(item.id, item.name, true)
-                        }
-                      >
-                        <Text style={styles.binderActionText}>FUSE</Text>
+                        <Text style={styles.binderActionText}>ADD</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
