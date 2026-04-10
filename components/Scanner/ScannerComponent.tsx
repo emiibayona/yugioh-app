@@ -119,7 +119,7 @@ export default function ScannerComponent({
     try {
       console.log(">>>> START", new Date().toLocaleTimeString());
       // Use lower quality for faster processing on Android
-      const photo = await camera.current.takeSnapshot({ quality: 60 });
+      const photo = await camera.current.takeSnapshot({ quality: 80 });
       if (!photo) return;
       console.log("Take snap", new Date().toLocaleTimeString());
 
@@ -180,7 +180,7 @@ export default function ScannerComponent({
                 "Hittig here in lightning mode, waiting longer to avoid multiple detections",
               );
               // Wait longer in lightning mode between detections to avoid multiple registrations
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              await new Promise((resolve) => setTimeout(resolve, 500));
             }
           }
         }
@@ -205,7 +205,7 @@ export default function ScannerComponent({
       isFocused
     ) {
       console.log("Starting frame analysis with mode:", scanMode);
-      interval = setInterval(analyzeFrame, 1500); // Increased interval for better performance
+      interval = setInterval(analyzeFrame, 1000); // Increased interval for better performance
     }
     return () => {
       if (interval) clearInterval(interval);

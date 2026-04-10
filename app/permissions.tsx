@@ -29,11 +29,11 @@ export default function PermissionsScreen() {
   const [mediaLibraryPermission, requestMediaLibraryPermission] =
     ExpoMediaLibrary.usePermissions();
 
-  const requestMicrophonePermission = async () => {
-    const permission = await Camera.requestMicrophonePermission();
+  // const requestMicrophonePermission = async () => {
+  //   const permission = await Camera.requestMicrophonePermission();
 
-    setMicrophonePermissionStatus(permission);
-  };
+  //   setMicrophonePermissionStatus(permission);
+  // };
 
   const requestCameraPermission = async () => {
     const permission = await Camera.requestCameraPermission();
@@ -44,7 +44,7 @@ export default function PermissionsScreen() {
   const handleContinue = () => {
     if (
       cameraPermissionStatus === "granted" &&
-      microphonePermissionStatus === "granted" &&
+      // microphonePermissionStatus === "granted" &&
       mediaLibraryPermission?.granted
     ) {
       router.replace("/");
@@ -91,9 +91,7 @@ export default function PermissionsScreen() {
           />
         </View>
 
-        <View style={styles.spacer} />
-
-        <View
+        {/* <View
           style={StyleSheet.compose(styles.row, styles.permissionContainer)}
         >
           <View style={styles.row}>
@@ -112,7 +110,7 @@ export default function PermissionsScreen() {
             value={microphonePermissionStatus === "granted"}
             onChange={requestMicrophonePermission}
           />
-        </View>
+        </View> */}
 
         <View style={styles.spacer} />
 
@@ -142,7 +140,7 @@ export default function PermissionsScreen() {
         >
           <Ionicons
             name="arrow-forward-outline"
-            color={"white"}
+            color={"black"}
             size={ICON_SIZE}
           />
         </TouchableHighlight>
@@ -188,5 +186,6 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderRadius: 50,
     alignSelf: "center",
+    backgroundColor: "white",
   },
 });

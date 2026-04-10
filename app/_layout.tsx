@@ -53,17 +53,14 @@ export default function RootLayout() {
 
   const checkPermissions = async () => {
     const cameraStatus = Camera.getCameraPermissionStatus();
-    const microStatus = Camera.getMicrophonePermissionStatus();
     const mediaStatus = await ExpoMediaLibrary.getPermissionsAsync();
 
     const allGranted =
       cameraStatus === "granted" &&
-      microStatus === "granted" &&
       mediaStatus.granted;
 
     console.log("🔍 Checking Permissions:", {
       cameraStatus,
-      microStatus,
       mediaGranted: mediaStatus.granted,
     });
     setHasPermissions(allGranted);
