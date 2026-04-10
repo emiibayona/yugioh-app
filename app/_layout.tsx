@@ -55,9 +55,7 @@ export default function RootLayout() {
     const cameraStatus = Camera.getCameraPermissionStatus();
     const mediaStatus = await ExpoMediaLibrary.getPermissionsAsync();
 
-    const allGranted =
-      cameraStatus === "granted" &&
-      mediaStatus.granted;
+    const allGranted = cameraStatus === "granted" && mediaStatus.granted;
 
     console.log("🔍 Checking Permissions:", {
       cameraStatus,
@@ -144,9 +142,11 @@ export default function RootLayout() {
       // ONLY initialize if permissions are granted and DB isn't loaded yet
       if (isDbLoaded || hasPermissions !== true) return;
 
-      console.log("🚀 Initializing database...");
+      console.log("🚀 Initializing database...", dbPath);
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
       const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
+      console.log("🚀 ~ initializeGeartownDb ~ fileInfo:", fileInfo);
+      console.log("🚀 ~ initializeGeartownDb ~ isFileBroken:", isFileBroken);
 
       try {
         const vRes = await fetch(`${apiUrl}/version`);
@@ -160,6 +160,7 @@ export default function RootLayout() {
         console.error("Failed to check version/download", e);
       }
       setIsDbLoaded(true);
+      console.log("✅ DATABASE READY !!!")
     }
 
     initializeGeartownDb();

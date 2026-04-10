@@ -67,7 +67,7 @@
     },
     "modes": {
       "lightning": "Rápido",
-      "stopAndGo": "Stop & Go",
+      "stopAndGo": "Pausado",
       "pause": "Pausa",
       "resume": "Reanudar",
       "working": "Trabajando..."

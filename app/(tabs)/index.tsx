@@ -1,8 +1,5 @@
 import * as React from "react";
-import {
-  StyleSheet,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useCameraPermission } from "react-native-vision-camera";
 import { useState } from "react";
@@ -11,13 +8,8 @@ import ScannerComponent from "@/components/Scanner/ScannerComponent";
 
 export default function EscanerScreen() {
   const { hasPermission } = useCameraPermission();
-  const [detectedCard, setDetectedCard] = useState<any>(null);
 
   const redirectToPermissions = !hasPermission;
-
-  const handleCardDetected = (card: any) => {
-    setDetectedCard(card);
-  };
 
   if (redirectToPermissions) return <Redirect href={"/permissions"} />;
 
@@ -25,7 +17,7 @@ export default function EscanerScreen() {
     <View style={styles.container}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <View style={styles.scannerWrapper}>
-        <ScannerComponent onCardDetected={handleCardDetected} />
+        <ScannerComponent />
       </View>
     </View>
   );
@@ -41,4 +33,3 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 });
-

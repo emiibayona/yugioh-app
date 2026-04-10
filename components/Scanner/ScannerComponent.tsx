@@ -35,15 +35,9 @@ import { useTranslation } from "react-i18next";
 import CardImage from "../ImageComponent";
 import * as ImageManipulator from "expo-image-manipulator";
 
-interface ScannerComponentProps {
-  onCardDetected: (card: any) => void;
-}
-
 type ScanMode = "lightning" | "stopAndGo" | "pause";
 
-export default function ScannerComponent({
-  onCardDetected,
-}: ScannerComponentProps) {
+export default function ScannerComponent() {
   const { width: screenWidth } = useWindowDimensions();
   const device = useCameraDevice("back");
   const isFocused = useIsFocused();
@@ -171,7 +165,6 @@ export default function ScannerComponent({
             addCard(cardFound);
             setRecentDetection(cardFound);
             setTimeout(() => setRecentDetection(null), 2000);
-            onCardDetected(cardFound);
 
             if (scanMode === "stopAndGo") {
               setScanMode("pause");
@@ -392,7 +385,7 @@ export default function ScannerComponent({
         />
       )}
 
-      <ScannerOverlay />
+      <ScannerOverlay isPaused={scanMode === "pause"} />
 
       <View style={styles.zoomContainer}>
         <Ionicons name="add" size={14} color="#00FFCC" />
@@ -418,6 +411,13 @@ export default function ScannerComponent({
             ]}
             onPress={() => handleModeChange("lightning")}
           >
+            {scanMode === "lightning" && (
+              <ActivityIndicator
+                size="small"
+                color="#000"
+                style={{ marginRight: 8 }}
+              />
+            )}
             <Text
               style={[
                 styles.modeBtnText,
@@ -435,6 +435,13 @@ export default function ScannerComponent({
             ]}
             onPress={() => handleModeChange("stopAndGo")}
           >
+            {scanMode === "stopAndGo" && (
+              <ActivityIndicator
+                size="small"
+                color="#000"
+                style={{ marginRight: 8 }}
+              />
+            )}
             <Text
               style={[
                 styles.modeBtnText,
@@ -490,7 +497,7 @@ export default function ScannerComponent({
           </View>
         )}
 
-        <View style={styles.actionArea}>
+        {/* <View style={styles.actionArea}>
           {scanMode === "pause" ? (
             <TouchableOpacity
               style={styles.resumeButton}
@@ -512,7 +519,7 @@ export default function ScannerComponent({
               </Text>
             </View>
           )}
-        </View>
+        </View> */}
 
         <View style={styles.topRow}>
           <TouchableOpacity
@@ -913,7 +920,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(0, 255, 204, 0.4)",
-    width: "80%",
+    width: "82%",
     justifyContent: "space-between",
   },
   modeBtn: {
@@ -932,7 +939,7 @@ const styles = StyleSheet.create({
   },
   modeBtnText: {
     color: "#AAA",
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
