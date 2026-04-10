@@ -140,7 +140,7 @@ export default function PermissionsScreen() {
         >
           <Ionicons
             name="arrow-forward-outline"
-            color={"white"}
+            color={"black"}
             size={ICON_SIZE}
           />
         </TouchableHighlight>
@@ -186,5 +186,6 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderRadius: 50,
     alignSelf: "center",
+    backgroundColor: "white",
   },
 });
