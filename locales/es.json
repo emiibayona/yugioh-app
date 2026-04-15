@@ -29,7 +29,8 @@
     "error": "Error",
     "success": "Éxito",
     "save": "Guardar",
-    "settingUpDb": "Configurando la base de datos..."
+    "settingUpDb": "Configurando la base de datos...",
+    "retry": "Reintentar"
   },
   "tabs": {
     "scanner": "Escáner",

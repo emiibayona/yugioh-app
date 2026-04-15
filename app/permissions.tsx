@@ -29,6 +29,19 @@ export default function PermissionsScreen() {
   const [mediaLibraryPermission, requestMediaLibraryPermission] =
     ExpoMediaLibrary.usePermissions();
 
+  React.useEffect(() => {
+    const checkInitialPermissions = async () => {
+      const cameraStatus = Camera.getCameraPermissionStatus();
+      setCameraPermissionStatus(cameraStatus);
+
+      // Microphone permission if needed
+      // const microphoneStatus = Camera.getMicrophonePermissionStatus();
+      // setMicrophonePermissionStatus(microphoneStatus);
+    };
+
+    checkInitialPermissions();
+  }, []);
+
   // const requestMicrophonePermission = async () => {
   //   const permission = await Camera.requestMicrophonePermission();
 

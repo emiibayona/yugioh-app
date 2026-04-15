@@ -8,16 +8,20 @@ import ScannerComponent from "@/components/Scanner/ScannerComponent";
 
 export default function EscanerScreen() {
   const { hasPermission } = useCameraPermission();
+  console.log("EscanerScreen: hasPermission =", hasPermission);
 
   const redirectToPermissions = !hasPermission;
 
-  if (redirectToPermissions) return <Redirect href={"/permissions"} />;
+  if (redirectToPermissions) {
+    console.log("Redirecting to permissions...");
+    return <Redirect href={"/permissions"} />;
+  }
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <View style={styles.scannerWrapper}>
-        <ScannerComponent />
+        <ScannerComponent key={hasPermission ? "granted" : "not-granted"} />
       </View>
     </View>
   );

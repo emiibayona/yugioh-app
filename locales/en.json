@@ -29,7 +29,8 @@
     "error": "Error",
     "success": "Success",
     "save": "Save",
-    "settingUpDb": "Setting up database..."
+    "settingUpDb": "Setting up database...",
+    "retry": "Retry"
   },
   "tabs": {
     "scanner": "Scanner",

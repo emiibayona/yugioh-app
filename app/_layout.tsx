@@ -130,7 +130,7 @@ export default function RootLayout() {
       console.log("✅ PROTOCOL COMPLETE: Database updated.");
       return true;
     } catch (error: any) {
-      console.error("🚨 SYNC FAILED:", error.message || "");
+      console.error("🚨 SYNC FAILED:", error || "");
       const tempCheck = await FileSystem.getInfoAsync(tempPath);
       if (tempCheck.exists) await FileSystem.deleteAsync(tempPath);
       return false;

@@ -18,6 +18,8 @@ import {
   Camera,
   useCameraDevice,
   useCameraFormat,
+  useCameraPermission,
+  useCameraDevices,
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import Slider from "@react-native-community/slider";
@@ -34,19 +36,32 @@ import useBinders from "@/hooks/useBinders";
 import { useTranslation } from "react-i18next";
 import CardImage from "../ImageComponent";
 import * as ImageManipulator from "expo-image-manipulator";
+import ObscuraPrompt from "../ObscuraPrompt";
 
 type ScanMode = "lightning" | "stopAndGo" | "pause";
 
 export default function ScannerComponent() {
   const { width: screenWidth } = useWindowDimensions();
+  const { hasPermission } = useCameraPermission();
+  const devices = useCameraDevices();
   const device = useCameraDevice("back");
   const isFocused = useIsFocused();
   const format = useCameraFormat(device, [
-    { videoResolution: { width: 1920, height: 1080 } },
-    { fps: 30 },
+    { videoResolution: "max" },
+    { fps: "max" },
   ]);
 
   const { t } = useTranslation();
+
+  useEffect(() => {
+    console.log("ScannerComponent mounted, hasPermission:", hasPermission);
+    console.log("Available devices:", devices.length);
+    if (device) {
+      console.log("Back camera device found:", device.name);
+    } else {
+      console.log("No back camera device found yet...");
+    }
+  }, [hasPermission, devices, device]);
 
   const camera = useRef<Camera>(null);
   const db = useSQLiteContext();
@@ -84,7 +99,10 @@ export default function ScannerComponent() {
 
   // Binder selection states
   const [showBinderSelector, setShowBinderSelector] = useState(false);
+  const [showNewBinderPrompt, setShowNewBinderPrompt] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  console.log("🚀 ~ ScannerComponent ~ isSyncing:", isSyncing);
 
   const analysisLock = useRef(false);
 
@@ -227,18 +245,12 @@ export default function ScannerComponent() {
   };
 
   const handleClearSession = () => {
-    Alert.alert(
-      t("scanner.session.clearSession"),
-      t("scanner.session.clearSessionConfirm"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.clear"),
-          onPress: clearSession,
-          style: "destructive",
-        },
-      ],
-    );
+    setShowClearConfirm(true);
+  };
+
+  const handleClearConfirm = () => {
+    clearSession();
+    setShowClearConfirm(false);
   };
 
   const handleManualSearch = async (text: string) => {
@@ -268,6 +280,7 @@ export default function ScannerComponent() {
   };
 
   const handleOpenBinderSelector = async () => {
+    console.log("tapped", sessionCards);
     if (sessionCards.length === 0) {
       Alert.alert(
         t("scanner.session.emptySession"),
@@ -319,33 +332,25 @@ export default function ScannerComponent() {
   };
 
   const handleCreateAndSync = () => {
-    Alert.prompt(
-      t("binder.new"),
-      t("binder.newMessage"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.save"),
-          onPress: async (name) => {
-            if (!name) return;
-            setIsSyncing(true);
-            try {
-              const newBinderId = await createBinder(name);
-              if (newBinderId) {
-                await handleSyncToBinder(newBinderId, name);
-              } else {
-                Alert.alert("Error", "Failed to create binder");
-              }
-            } catch (e) {
-              Alert.alert("Error", "Failed to create binder");
-            } finally {
-              setIsSyncing(false);
-            }
-          },
-        },
-      ],
-      "plain-text",
-    );
+    setShowNewBinderPrompt(true);
+  };
+
+  const handleCreateBinderConfirm = async (name: string | undefined) => {
+    if (!name) return;
+    setShowNewBinderPrompt(false);
+    setIsSyncing(true);
+    try {
+      const newBinderId = await createBinder(name);
+      if (newBinderId) {
+        await handleSyncToBinder(newBinderId, name);
+      } else {
+        Alert.alert("Error", "Failed to create binder");
+      }
+    } catch (e) {
+      Alert.alert("Error", "Failed to create binder");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleCloseBinderSelector = () => {
@@ -357,9 +362,27 @@ export default function ScannerComponent() {
     return (
       <View style={styles.error}>
         <ActivityIndicator size="large" color="#00FFCC" />
-        <Text style={{ color: "#FFF", marginTop: 10 }}>
+        <Text style={{ color: "#FFF", marginTop: 10, marginBottom: 20 }}>
           {t("scanner.loadingCamera")}
         </Text>
+        <TouchableOpacity
+          onPress={() => {
+            // Just trigger a re-render to re-run hooks
+            setZoom((z) => z);
+          }}
+          style={{
+            backgroundColor: "rgba(0, 255, 204, 0.1)",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "#00FFCC",
+          }}
+        >
+          <Text style={{ color: "#00FFCC", fontWeight: "bold" }}>
+            {t("common.retry") || "Retry"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
 
@@ -379,8 +402,9 @@ export default function ScannerComponent() {
           photo={true}
           zoom={zoom}
           format={format}
-          video={true}
           resizeMode="cover"
+          focusable={true}
+          tabIndex={0}
           enableZoomGesture={true}
         />
       )}
@@ -835,6 +859,27 @@ export default function ScannerComponent() {
           </View>
         </View>
       </Modal>
+
+      <ObscuraPrompt
+        visible={showNewBinderPrompt}
+        title={t("binder.new")}
+        message={t("binder.newMessage")}
+        placeholder={t("binder.namePlaceholder")}
+        onCancel={() => setShowNewBinderPrompt(false)}
+        onConfirm={handleCreateBinderConfirm}
+        confirmText={t("common.save")}
+        cancelText={t("common.cancel")}
+      />
+      <ObscuraPrompt
+        visible={showClearConfirm}
+        title={t("scanner.session.clearSession")}
+        message={t("scanner.session.clearSessionConfirm")}
+        type="confirm"
+        onCancel={() => setShowClearConfirm(false)}
+        onConfirm={handleClearConfirm}
+        confirmText={t("common.clear")}
+        cancelText={t("common.cancel")}
+      />
     </View>
   );
 }
