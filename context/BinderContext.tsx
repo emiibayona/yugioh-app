@@ -36,6 +36,7 @@ interface BindersContextType {
     cards: any[],
   ) => Promise<boolean>;
   addCardsToBinder: (binderId: string, cards: any[]) => Promise<boolean>;
+  updateAllCardsBinder: (binderId: string, cards: any[]) => Promise<boolean>;
 }
 
 const BindersContext = createContext<BindersContextType | undefined>(undefined);
@@ -221,6 +222,28 @@ export function BindersProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateAllCardsBinder = async (binderId: string, cards: any[]) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(`${API_URL}/${binderId}/update-all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ cards }),
+      });
+      if (response.ok) {
+        await fetchBinders(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("addCardsToBinder error:", error);
+      return false;
+    }
+  };
+
   return (
     <BindersContext.Provider
       value={{
@@ -233,6 +256,7 @@ export function BindersProvider({ children }: { children: React.ReactNode }) {
         fuseBinders,
         addCardsToBinder,
         userNumbers,
+        updateAllCardsBinder,
       }}
     >
       {children}
