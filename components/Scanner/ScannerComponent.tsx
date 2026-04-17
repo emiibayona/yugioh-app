@@ -1,14 +1,12 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
   Text,
   useWindowDimensions,
   TouchableOpacity,
-  Switch,
   Modal,
   FlatList,
-  Image,
   Alert,
   TextInput,
   ActivityIndicator,
@@ -31,7 +29,6 @@ import useDatabase from "@/hooks/useDatabase";
 import ScannerOverlay from "./ScannerOverlay";
 import useScannerSession from "@/hooks/useScannerSession";
 import { Ionicons } from "@expo/vector-icons";
-import useCardImage from "@/hooks/useCardImage";
 import useBinders from "@/hooks/useBinders";
 import { useTranslation } from "react-i18next";
 import CardImage from "../ImageComponent";
@@ -92,17 +89,50 @@ export default function ScannerComponent() {
   const [recentDetection, setRecentDetection] = useState<any>(null);
 
   // Manual search states
+  const [rawSearchText, setRawSearchText] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchText(rawSearchText);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [rawSearchText]);
+
+  useEffect(() => {
+    const performSearch = async () => {
+      if (searchText.length < 3) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const results = await searchCards(searchText, false);
+        console.log("🚀 ~ performSearch ~ results:", results)
+        console.log("🚀 ~ performSearch ~ searchText:", searchText)
+        setSearchResults(results);
+      } catch (e) {
+        console.error("Manual search failed", e);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [searchText]);
 
   // Binder selection states
   const [showBinderSelector, setShowBinderSelector] = useState(false);
   const [showNewBinderPrompt, setShowNewBinderPrompt] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  console.log("🚀 ~ ScannerComponent ~ isSyncing:", isSyncing);
 
   const analysisLock = useRef(false);
 
@@ -253,34 +283,15 @@ export default function ScannerComponent() {
     setShowClearConfirm(false);
   };
 
-  const handleManualSearch = async (text: string) => {
-    setSearchText(text);
-    if (text.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const results = await searchCards(text, true);
-      setSearchResults(results);
-    } catch (e) {
-      console.error("Manual search failed", e);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const handleAddManualCard = (card: any) => {
     addCard(card);
-    setSearchText("");
+    setRawSearchText("");
     setSearchResults([]);
     setShowSearchInput(false);
     Alert.alert(t("scanner.session.added"), `${card.name}`);
   };
 
   const handleOpenBinderSelector = async () => {
-    console.log("tapped", sessionCards);
     if (sessionCards.length === 0) {
       Alert.alert(
         t("scanner.session.emptySession"),
@@ -570,6 +581,7 @@ export default function ScannerComponent() {
         onRequestClose={() => {
           setShowSessionModal(false);
           setShowSearchInput(false);
+          setRawSearchText("");
         }}
       >
         <View style={styles.modalOverlay}>
@@ -584,7 +596,10 @@ export default function ScannerComponent() {
               </View>
               <View style={styles.headerRight}>
                 <TouchableOpacity
-                  onPress={() => setShowSearchInput(!showSearchInput)}
+                  onPress={() => {
+                    setShowSearchInput(!showSearchInput);
+                    if (showSearchInput) setRawSearchText("");
+                  }}
                   style={styles.headerIconBtn}
                 >
                   <Ionicons
@@ -597,6 +612,7 @@ export default function ScannerComponent() {
                   onPress={() => {
                     setShowSessionModal(false);
                     setShowSearchInput(false);
+                    setRawSearchText("");
                   }}
                   style={styles.headerIconBtn}
                 >
@@ -618,8 +634,8 @@ export default function ScannerComponent() {
                     style={styles.searchInput}
                     placeholder={t("scanner.manualSearchPlaceholder")}
                     placeholderTextColor="#999"
-                    value={searchText}
-                    onChangeText={handleManualSearch}
+                    value={rawSearchText}
+                    onChangeText={setRawSearchText}
                     autoFocus
                   />
                   {isSearching && (
@@ -651,7 +667,7 @@ export default function ScannerComponent() {
                     )}
                   />
                 )}
-                {searchText.length >= 3 &&
+                {rawSearchText.length >= 3 &&
                   searchResults.length === 0 &&
                   !isSearching && (
                     <Text style={styles.noResultsText}>

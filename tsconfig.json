@@ -3,6 +3,7 @@
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "types": ["node", "jest"],
+    "jsx": "react-native", // <--- Add or change this line
     "strict": true,
     "paths": {
       "@/*": ["./*"]

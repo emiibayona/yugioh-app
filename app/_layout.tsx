@@ -18,11 +18,13 @@ import { StatusBar } from "expo-status-bar";
 
 import * as FileSystem from "expo-file-system";
 import * as SQLite from "expo-sqlite";
+import { Asset } from "expo-asset";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthProvider } from "@/context/AuthContext";
 import { BindersProvider } from "@/context/BinderContext";
 import { Camera } from "react-native-vision-camera";
 import * as ExpoMediaLibrary from "expo-media-library";
+import { Alert } from "react-native";
 
 import Config from "@/constants/Config";
 import "@/locales/i18n";
@@ -41,6 +43,7 @@ export default function RootLayout() {
 
   const apiUrl = Config.API_URL;
   const versionKey = "db_version_tag";
+  const defaultVersion = "1.0.0";
 
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
@@ -102,22 +105,57 @@ export default function RootLayout() {
 
   async function checkVersion(remoteVersion: string) {
     try {
-      const localVersion = (await AsyncStorage.getItem(versionKey)) || "0.0.0";
+      let localVersion = await AsyncStorage.getItem(versionKey);
+      if (!localVersion) {
+        localVersion = defaultVersion;
+        await AsyncStorage.setItem(versionKey, defaultVersion);
+      }
+
       const rParts = remoteVersion.split(".");
       const lParts = localVersion.split(".");
       const rX = parseInt(rParts[0] || "0");
       const rY = parseInt(rParts[1] || "0");
       const lX = parseInt(lParts[0] || "0");
       const lY = parseInt(lParts[1] || "0");
-      await AsyncStorage.setItem(versionKey, remoteVersion);
-      return rX !== lX || rY !== lY;
+
+      const needsUpdate = rX !== lX || rY !== lY;
+      if (needsUpdate) {
+        // We will update AsyncStorage AFTER successful download
+        return true;
+      }
+      return false;
     } catch (e) {
       console.warn("Could not fetch version after initial download.", e);
       return true;
     }
   }
 
-  async function downloadDatabase() {
+  async function downloadDatabase(
+    remoteVersion: string,
+    isFileBroken: boolean,
+  ) {
+    const proceed = await new Promise((resolve) => {
+      Alert.alert(
+        t("db.updateAlertTitle", "Database Update"),
+        t(
+          "db.updateAlertMessage",
+          "A database update is available. If you are on cellular data, this may consume significant data. Do you want to proceed?",
+        ),
+        [
+          {
+            text: t("common.cancel", "Cancel"),
+            onPress: () => resolve(false),
+            style: "cancel",
+          },
+          {
+            text: t("common.confirm", "Download"),
+            onPress: () => resolve(true),
+          },
+        ],
+      );
+    });
+    if (!proceed) return false;
+
     const tempPath = `${FileSystem.cacheDirectory}${dbName}.tmp`;
     try {
       console.log("⚙️ SYNCING DATA FROM ARCHIVE...");
@@ -127,6 +165,7 @@ export default function RootLayout() {
       if (download.status !== 200)
         throw new Error(`Download failed: ${download.status}`);
       await FileSystem.moveAsync({ from: tempPath, to: dbPath });
+      await AsyncStorage.setItem(versionKey, remoteVersion);
       console.log("✅ PROTOCOL COMPLETE: Database updated.");
       return true;
     } catch (error: any) {
@@ -143,10 +182,31 @@ export default function RootLayout() {
       if (isDbLoaded || hasPermissions !== true) return;
 
       console.log("🚀 Initializing database...", dbPath);
+
+      const dbDirInfo = await FileSystem.getInfoAsync(dbFolder);
+      if (!dbDirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(dbFolder, { intermediates: true });
+      }
+
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
-      const isFileBroken = !fileInfo.exists || fileInfo.size === 0;
-      console.log("🚀 ~ initializeGeartownDb ~ fileInfo:", fileInfo);
-      console.log("🚀 ~ initializeGeartownDb ~ isFileBroken:", isFileBroken);
+      let isFileBroken = !fileInfo.exists || fileInfo.size === 0;
+
+      if (isFileBroken) {
+        console.log("📦 Copying bundled database from assets...");
+        try {
+          const [{ uri }] = await Asset.loadAsync(
+            require("@/assets/database/yugioh_database.sqlite"),
+          );
+          await FileSystem.copyAsync({ from: uri, to: dbPath });
+          await AsyncStorage.setItem(versionKey, defaultVersion);
+          isFileBroken = false;
+        } catch (e) {
+          console.warn(
+            "Failed to copy bundled database, will try downloading.",
+            e,
+          );
+        }
+      }
 
       try {
         const vRes = await fetch(`${apiUrl}/version`);
@@ -154,13 +214,13 @@ export default function RootLayout() {
         const needUpdateVersion = await checkVersion(vData.version);
 
         if (isFileBroken || needUpdateVersion) {
-          await downloadDatabase();
+          await downloadDatabase(vData.version, isFileBroken);
         }
       } catch (e) {
         console.error("Failed to check version/download", e);
       }
       setIsDbLoaded(true);
-      console.log("✅ DATABASE READY !!!")
+      console.log("✅ DATABASE READY !!!");
     }
 
     initializeGeartownDb();

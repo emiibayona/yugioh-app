@@ -18,7 +18,8 @@
     "error": "Error",
     "language": "Language",
     "english": "English",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "portuguese": "Portuguese"
   },
   "common": {
     "loading": "Loading",
@@ -29,13 +30,31 @@
     "error": "Error",
     "success": "Success",
     "save": "Save",
+    "saving": "Saving changes...",
     "settingUpDb": "Setting up database...",
-    "retry": "Retry"
+    "retry": "Retry",
+    "goBack": "Go Back"
   },
   "tabs": {
+    "home": "Home",
     "scanner": "Scanner",
     "collection": "Collection",
     "profile": "Profile"
+  },
+  "home": {
+    "welcome": "Welcome, Duelist!",
+    "howToUse": "How to use",
+    "step1Title": "Scan your cards",
+    "step1Desc": "Go to the Scanner tab and point your camera at a Yu-Gi-Oh! card.",
+    "step2Title": "Manage Collection",
+    "step2Desc": "Organize your scanned cards into different binders.",
+    "step3Title": "Keep it Synced",
+    "step3Desc": "Your collection is automatically synced with your account.",
+    "startScanning": "Start Scanning"
+  },
+  "db": {
+    "updateAlertTitle": "Database Update",
+    "updateAlertMessage": "A database update is available. If you are on cellular data, this may consume significant data. Do you want to proceed?"
   },
   "card": {
     "nCards": "{{number}} Cards",
@@ -60,7 +79,7 @@
       "cardSynced": "Card added to {{binderName}}",
       "cardsSynced": "{{count}} cards added to {{binderName}}",
       "list": {
-        "title": "Lista",
+        "title": "List",
         "searching": "Searching...",
         "empty": "No cards scanned yet",
         "notFound": "No cards found"
@@ -86,11 +105,14 @@
     "selectShort": "Select",
     "newAndSync": "Add to a new binder",
     "notFound": "No binders found",
+    "empty": "This binder is empty",
     "firstBinder": "You don't have any binders yet! Create a new one to start organizing your collection.",
     "delete": "Delete Binder",
     "deleteInfo": "This will delete the cards there too.\n\nThis actions cannot be undone.\n\n⚠️ Info: you can merge binders before delete this binder.",
     "deleteConfirm": "Are you sure?",
     "updatedDate": "Updated: {{date}}",
+    "saveError": "Failed to save binder",
+    "fuseError": "Merge failed",
     "editing": {
       "placeholder": {
         "name": "Binder Name",
@@ -108,6 +130,7 @@
   },
   "login": {
     "title": "Login",
+    "appName": "Yugioh Scanner",
     "subtitle": "Welcome back, Duelist!",
     "email": "Email",
     "password": "Password",
@@ -143,7 +166,10 @@
     "confirmPassword": "Confirm Password"
   },
   "permissions": {
+    "title": "Permissions",
     "subtitle": "Yugioh Card Scanner needs access to a few permissions in order to work properly.",
+    "enableInSettings": "Please go to settings and enable permissions",
+    "required": "REQUIRED",
     "camera": {
       "title": "Camera",
       "description": "Yugioh Card Scanner needs access to your camera to scan your cards."

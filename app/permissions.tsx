@@ -62,13 +62,13 @@ export default function PermissionsScreen() {
     ) {
       router.replace("/");
     } else {
-      Alert.alert("Please go to settings and enable permissions");
+      Alert.alert(t("permissions.enableInSettings"));
     }
   };
 
   return (
     <>
-      <Stack.Screen options={{ title: "Permissions" }} />
+      <Stack.Screen options={{ title: t("permissions.title") }} />
       <ThemedView style={styles.container}>
         <View style={styles.spacer} />
 
@@ -84,7 +84,7 @@ export default function PermissionsScreen() {
             color={"orange"}
             size={ICON_SIZE}
           />
-          <ThemedText style={styles.footnote}>REQUIRED</ThemedText>
+          <ThemedText style={styles.footnote}>{t("permissions.required")}</ThemedText>
         </View>
 
         <View style={styles.spacer} />
@@ -94,8 +94,8 @@ export default function PermissionsScreen() {
         >
           <Ionicons name="camera-outline" color={"gray"} size={ICON_SIZE} />
           <View style={styles.permissionText}>
-            <ThemedText type="subtitle">Camera</ThemedText>
-            <ThemedText>Used for taking photos and videos.</ThemedText>
+            <ThemedText type="subtitle">{t("permissions.camera.title")}</ThemedText>
+            <ThemedText>{t("permissions.camera.description")}</ThemedText>
           </View>
           <Switch
             trackColor={{ true: "orange" }}
@@ -132,8 +132,8 @@ export default function PermissionsScreen() {
         >
           <Ionicons name="library-outline" color={"gray"} size={ICON_SIZE} />
           <View style={styles.permissionText}>
-            <ThemedText type="subtitle">Library</ThemedText>
-            <ThemedText>Used for saving, viewing and more.</ThemedText>
+            <ThemedText type="subtitle">{t("permissions.storage.title")}</ThemedText>
+            <ThemedText>{t("permissions.storage.description")}</ThemedText>
           </View>
           <Switch
             trackColor={{ true: "orange" }}

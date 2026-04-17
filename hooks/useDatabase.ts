@@ -205,14 +205,20 @@ export default function useDatabase(db: SQLiteDatabase) {
     const normalized = cardName.trim().toUpperCase();
 
     try {
-      // 1. Get a broad set of candidates
+      // 1. Prioritize "Starts With" matches
+      const prefixQuery = `SELECT * FROM cards WHERE UPPER(name) LIKE ? LIMIT 10`;
+      const prefixParams = [`${normalized}%`];
+      const prefixMatches: any[] = await db.getAllAsync(
+        prefixQuery,
+        prefixParams,
+      );
+
+      // 2. Get broader candidates for fuzzy matching if needed
       const query = `SELECT * FROM cards WHERE UPPER(name) LIKE ? OR UPPER(name) LIKE ? LIMIT 100`;
       const params = [`%${normalized}%`, `${normalized.substring(0, 3)}%`];
       const candidates: any[] = await db.getAllAsync(query, params);
 
-      if (candidates.length === 0) return [];
-
-      // 2. Use Fuse to rank them
+      // 3. Use Fuse to rank broader candidates
       const clean = (str: string) =>
         str
           .toUpperCase()
@@ -232,14 +238,16 @@ export default function useDatabase(db: SQLiteDatabase) {
 
       const fuseResults = fuse.search(clean(normalized));
 
-      // 3. Take top 4
-      const topMatches = fuseResults
-        .slice(0, 10)
-        .map((r) => r.item)
-        .filter(
-          (item, index, arr) =>
-            arr.findIndex((i) => i.cardId === item.cardId) === index,
-        );
+      const fuzzyMatches = fuseResults.map((r) => r.item);
+
+      // 4. Combine: Prefix matches first, then fuzzy matches, removing duplicates
+      const combined = [...prefixMatches, ...fuzzyMatches];
+      const uniqueMatches = combined.filter(
+        (item, index, arr) => arr.findIndex((i) => i.id === item.id) !== index,
+      );
+
+      // 5. Take top 10 results (ensures at least 3 if they exist)
+      const topMatches = uniqueMatches.slice(0, 5);
 
       if (withImage) {
         for (let i = 0; i < topMatches.length; i++) {

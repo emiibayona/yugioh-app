@@ -69,7 +69,7 @@ export default function CollectionScreen() {
       resetForm();
       loadData();
     } else {
-      Alert.alert(t("common.error"), "Failed to save binder");
+      Alert.alert(t("common.error"), t("binder.saveError"));
     }
   };
 
@@ -135,7 +135,7 @@ export default function CollectionScreen() {
               setSelectedForFuse([]);
               loadData();
             } else {
-              Alert.alert(t("common.error"), "Fuse failed");
+              Alert.alert(t("common.error"), t("binder.fuseError"));
             }
           },
         },
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   subtitleB: {
     fontSize: 12,
-    maxWidth: "90%",
+    maxWidth: "80%",
     color: "#00FFCC",
     fontWeight: "bold",
   },

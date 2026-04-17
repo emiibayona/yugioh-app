@@ -54,6 +54,24 @@ export default function LanguageSelector({ floating }: LanguageSelectorProps) {
             🇪🇸 {floating ? "" : t("profile.spanish")}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.languageBtn,
+            currentLanguage.startsWith("pt") && styles.activeLanguageBtn,
+            floating && styles.floatingBtn,
+          ]}
+          onPress={() => changeLanguage("pt")}
+        >
+          <Text
+            style={[
+              styles.languageBtnText,
+              currentLanguage.startsWith("pt") && styles.activeLanguageBtnText,
+              floating && styles.floatingBtnText,
+            ]}
+          >
+            🇧🇷 {floating ? "" : t("profile.portuguese")}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

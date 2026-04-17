@@ -1,0 +1,199 @@
+{
+  "profile": {
+    "title": "Perfil",
+    "editProfile": "Editar Perfil",
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "logout": "Sair",
+    "cards": "Cartas",
+    "binders": "Pastas",
+    "welcomeBack": "Bem-vindo de volta",
+    "signInSubtitle": "Entre para sincronizar sua coleção",
+    "login": "Entrar",
+    "updateSuccess": "Perfil atualizado com sucesso",
+    "updateError": "Falha ao atualizar o perfil",
+    "success": "Sucesso",
+    "error": "Erro",
+    "language": "Idioma",
+    "english": "Inglês",
+    "spanish": "Espanhol",
+    "portuguese": "Português"
+  },
+  "common": {
+    "loading": "Carregando",
+    "initializing": "Inicializando",
+    "cancel": "Cancelar",
+    "clear": "Limpar",
+    "confirm": "Confirmar",
+    "error": "Erro",
+    "success": "Sucesso",
+    "save": "Salvar",
+    "saving": "Salvando alterações...",
+    "settingUpDb": "Configurando banco de dados...",
+    "retry": "Tentar novamente",
+    "goBack": "Voltar"
+  },
+  "tabs": {
+    "home": "Início",
+    "scanner": "Scanner",
+    "collection": "Coleção",
+    "profile": "Perfil"
+  },
+  "home": {
+    "welcome": "Bem-vindo, Duelista!",
+    "howToUse": "Como usar",
+    "step1Title": "Escaneie suas cartas",
+    "step1Desc": "Vá para a aba Scanner e aponte sua câmera para uma carta de Yu-Gi-Oh!",
+    "step2Title": "Gerencie sua Coleção",
+    "step2Desc": "Organize suas cartas escaneadas em diferentes pastas.",
+    "step3Title": "Mantenha Sincronizado",
+    "step3Desc": "Sua coleção é sincronizada automaticamente com sua conta.",
+    "startScanning": "Começar Escaneamento"
+  },
+  "db": {
+    "updateAlertTitle": "Atualização do Banco de Dados",
+    "updateAlertMessage": "Uma atualização do banco de dados está disponível. Se você estiver usando dados móveis, isso pode consumir dados significativos. Deseja prosseguir?"
+  },
+  "card": {
+    "nCards": "{{number}} cartas",
+    "treatment": {
+      "foil": "Foil"
+    },
+    "sync": {
+      "syncing": "Sincronizando..."
+    }
+  },
+  "scanner": {
+    "manualSearchPlaceholder": "Buscar carta manualmente...",
+    "loadingCamera": "Conectando à câmera...",
+    "session": {
+      "clearSession": "Limpar Sessão",
+      "addToBinder": "Adicionar à pasta",
+      "clearSessionConfirm": "Tem certeza de que deseja limpar todas as cartas?",
+      "added": "Carta adicionada",
+      "emptySession": "Sessão vazia",
+      "scanCards": "Escaneie algumas cartas primeiro!",
+      "scanned": "escaneadas",
+      "cardSynced": "Carta adicionada em {{binderName}}",
+      "cardsSynced": "{{count}} cartas adicionadas em {{binderName}}",
+      "list": {
+        "title": "Lista",
+        "searching": "Buscando...",
+        "empty": "Nenhuma carta escaneada ainda",
+        "notFound": "Nenhuma carta encontrada"
+      }
+    },
+    "modes": {
+      "lightning": "Rápido",
+      "stopAndGo": "Pausado",
+      "pause": "Pausa",
+      "resume": "Retomar",
+      "working": "Trabalhando..."
+    }
+  },
+  "binder": {
+    "title": "Coleção",
+    "subtitle": "Gerencie sua coleção de pastas",
+    "binder": "Pastas",
+    "new": "Nova pasta",
+    "newMessage": "Digite um nome para sua nova pasta:",
+    "edit": "Editar pasta",
+    "namePlaceholder": "Nome da Pasta",
+    "select": "Selecionar Pasta",
+    "selectShort": "Selecionar",
+    "newAndSync": "Adicionar a uma nova pasta",
+    "notFound": "Nenhuma pasta encontrada",
+    "empty": "Esta pasta está vazia",
+    "firstBinder": "Você ainda não tem pastas! Crie uma nova para começar a organizar sua coleção.",
+    "delete": "Excluir Pasta",
+    "deleteInfo": "Isso também excluirá as cartas contidas nela.\n\nEsta ação não pode ser desfeita.\n\n⚠️ Info: você pode mesclar pastas antes de excluir esta pasta.",
+    "deleteConfirm": "Tem certeza?",
+    "updatedDate": "Atualizado: {{date}}",
+    "saveError": "Falha ao salvar a pasta",
+    "fuseError": "Falha ao mesclar as pastas",
+    "editing": {
+      "placeholder": {
+        "name": "Nome da Pasta",
+        "description": "Descrição da Pasta (Opcional)"
+      },
+      "merge": {
+        "alert": "Mesclando pastas",
+        "title": "Selecionar pastas para mesclar",
+        "message": "Você está mesclando {{source}} em {{target}}. Isso moverá todas as cartas de {{source}} para {{target}} e depois excluirá {{source}}.\n\n⚠️ Info: Esta ação não pode ser desfeita.",
+        "execute": "Mesclar",
+        "source": "Origem",
+        "target": "Destino"
+      }
+    }
+  },
+  "login": {
+    "title": "Login",
+    "appName": "Yugioh Scanner",
+    "subtitle": "Bem-vindo de volta, Duelista!",
+    "email": "E-mail",
+    "password": "Senha",
+    "login": "Entrar",
+    "register": "Não tem uma conta?",
+    "registerNow": "Registre-se agora",
+    "validation": {
+      "required": "Por favor, preencha todos os campos",
+      "loginFailed": "Falha no Login",
+      "invalidCredentials": "Verifique suas credenciais",
+      "error": "Ocorreu um erro, tente novamente."
+    }
+  },
+  "register": {
+    "title": "Crie sua conta",
+    "subtitle": "Seja o melhor duelista com sua coleção organizada.",
+    "register": "Cadastrar",
+    "login": "Já tem uma conta?",
+    "loginNow": "Entrar agora",
+    "confirm": "Cadastrar",
+    "addPhoto": "Sua Foto",
+    "validation": {
+      "required": "Por favor, preencha todos os campos",
+      "registrationFailed": "Falha no Cadastro",
+      "error": "Ocorreu um erro, tente novamente."
+    }
+  },
+  "fields": {
+    "passwordMismatch": "As senhas não coincidem",
+    "name": "Nome",
+    "lastname": "Sobrenome",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha"
+  },
+  "permissions": {
+    "title": "Permissões",
+    "subtitle": "O Yugioh Card Scanner precisa de acesso a algumas permissões para funcionar corretamente.",
+    "enableInSettings": "Por favor, vá para as configurações e habilite as permissões",
+    "required": "OBRIGATÓRIO",
+    "camera": {
+      "title": "Câmera",
+      "description": "O Yugioh Card Scanner precisa de acesso à sua câmera para escanear suas cartas."
+    },
+    "microphone": {
+      "title": "Microfone",
+      "description": "O Yugioh Card Scanner precisa de acesso ao seu microfone para melhorar a detecção de cartas em ambientes barulhentos."
+    },
+    "storage": {
+      "title": "Armazenamento",
+      "description": "O Yugioh Card Scanner precisa de acesso ao armazenamento para salvar imagens de suas cartas e sincronizá-las com sua coleção."
+    },
+    "mediaLocation": {
+      "title": "Localização de Mídia",
+      "description": "O Yugioh Card Scanner precisa de acesso à sua localização de mídia para organizar as imagens de suas cartas e sincronizá-las com sua coleção."
+    },
+    "foregroundService": {
+      "title": "Serviço de Primeiro Plano",
+      "description": "O Yugioh Card Scanner usa um serviço de primeiro plano para manter a câmera ativa enquanto você escaneia suas cartas, mesmo se você mudar de aplicativo temporariamente."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "description": "O Yugioh Card Scanner precisa de permissão para enviar notificações sobre o status da sincronização de suas cartas e outras atualizações importantes."
+    }
+  }
+}

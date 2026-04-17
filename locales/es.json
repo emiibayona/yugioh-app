@@ -18,7 +18,8 @@
     "error": "Error",
     "language": "Idioma",
     "english": "Inglés",
-    "spanish": "Español"
+    "spanish": "Español",
+    "portuguese": "Portugués"
   },
   "common": {
     "loading": "Cargando",
@@ -29,13 +30,31 @@
     "error": "Error",
     "success": "Éxito",
     "save": "Guardar",
+    "saving": "Guardando cambios...",
     "settingUpDb": "Configurando la base de datos...",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "goBack": "Volver"
   },
   "tabs": {
+    "home": "Inicio",
     "scanner": "Escáner",
     "collection": "Colección",
     "profile": "Perfil"
+  },
+  "home": {
+    "welcome": "¡Bienvenido, Duelista!",
+    "howToUse": "Cómo usar",
+    "step1Title": "Escanea tus cartas",
+    "step1Desc": "Ve a la pestaña Escáner y apunta tu cámara a una carta de Yu-Gi-Oh!",
+    "step2Title": "Gestiona tu Colección",
+    "step2Desc": "Organiza tus cartas escaneadas en diferentes carpetas.",
+    "step3Title": "Mantente Sincronizado",
+    "step3Desc": "Tu colección se sincroniza automáticamente con tu cuenta.",
+    "startScanning": "Empezar a Escanear"
+  },
+  "db": {
+    "updateAlertTitle": "Actualización de Base de Datos",
+    "updateAlertMessage": "Hay una actualización de la base de datos disponible. Si estás usando datos móviles, esto podría consumir una cantidad significativa de datos. ¿Quieres continuar?"
   },
   "card": {
     "nCards": "{{number}} cartas",
@@ -86,11 +105,14 @@
     "selectShort": "Seleccionar",
     "newAndSync": "Agregar a una nueva carpeta",
     "notFound": "No se encontraron carpetas",
+    "empty": "Esta carpeta está vacía",
     "firstBinder": "¡Parece que no tienes carpetas aún! Crea una nueva para empezar a organizar tu colección.",
     "delete": "Eliminar carpeta",
     "deleteInfo": "Se eliminarán las cartas dentro de ella.\n\nEsta acción no se puede deshacer.\n\n⚠️ Info: puedes fusionar carpetas antes si deseas.",
     "deleteConfirm": "¿Estás seguro?",
     "updatedDate": "Actualizado: {{date}}",
+    "saveError": "Error al guardar la carpeta",
+    "fuseError": "Error al fusionar carpetas",
     "editing": {
       "placeholder": {
         "name": "Nombre de la carpeta",
@@ -108,6 +130,7 @@
   },
   "login": {
     "title": "Iniciar Sesión",
+    "appName": "Yugioh Scanner",
     "subtitle": "¡Bienvenido de nuevo, duelista!",
     "email": "Email",
     "password": "Contraseña",
@@ -146,6 +169,8 @@
   "permissions": {
     "title": "Permisos",
     "subtitle": "Yugioh Card Scanner necesita acceso a algunos permisos para funcionar correctamente.",
+    "enableInSettings": "Por favor, ve a ajustes y activa los permisos",
+    "required": "REQUERIDO",
     "camera": {
       "title": "Cámara",
       "description": "Yugioh Card Scanner necesita acceso a tu cámara para escanear tus cartas."

@@ -55,7 +55,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Ionicons name="card" size={80} color="#00FFCC" />
-          <Text style={styles.title}>Yugioh Scanner</Text>
+          <Text style={styles.title}>{t("login.appName")}</Text>
           <Text style={styles.subtitle}>{t("login.subtitle")}</Text>
         </View>
 

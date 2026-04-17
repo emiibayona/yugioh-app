@@ -53,9 +53,9 @@ export default function BinderDetailScreen() {
   if (!binder) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Binder not found</Text>
+        <Text style={styles.errorText}>{t("binder.notFound")}</Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backLink}>Go Back</Text>
+          <Text style={styles.backLink}>{t("common.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -137,7 +137,7 @@ export default function BinderDetailScreen() {
         {isEditing ? (
           <View style={styles.editActions}>
             <TouchableOpacity onPress={handleToggleEdit} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t("common.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSave}
@@ -145,7 +145,7 @@ export default function BinderDetailScreen() {
               disabled={isSaving || !hasChanges}
             >
               <Text style={[styles.saveText, !hasChanges && styles.saveTextDisabled]}>
-                Save
+                {t("common.save")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -215,7 +215,7 @@ export default function BinderDetailScreen() {
                             item.treatment === "foil" && styles.foilActiveText,
                           ]}
                         >
-                          FOIL
+                          {t("card.treatment.foil")}
                         </Text>
                       </TouchableOpacity>
 
@@ -232,7 +232,7 @@ export default function BinderDetailScreen() {
                       {item.treatment === "foil" && (
                         <View style={styles.foilBadge}>
                           <Ionicons name="sparkles" size={10} color="#000" />
-                          <Text style={styles.foilText}>FOIL</Text>
+                          <Text style={styles.foilText}>{t("card.treatment.foil")}</Text>
                         </View>
                       )}
                     </>
@@ -245,7 +245,7 @@ export default function BinderDetailScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="copy-outline" size={64} color="#222" />
-            <Text style={styles.emptyText}>This binder is empty</Text>
+            <Text style={styles.emptyText}>{t("binder.empty")}</Text>
           </View>
         }
       />
@@ -280,7 +280,7 @@ export default function BinderDetailScreen() {
       {isSaving && (
         <View style={styles.savingOverlay}>
           <ActivityIndicator size="large" color="#00FFCC" />
-          <Text style={styles.savingText}>Saving changes...</Text>
+          <Text style={styles.savingText}>{t("common.saving")}</Text>
         </View>
       )}
     </View>
